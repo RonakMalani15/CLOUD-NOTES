@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Cloud Computing – TYBCA 6th Sem Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:wght@400;600&family=Source+Code+Pro:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --page-bg: #ffffff;
+    --ink: #111111;
+    --ink-muted: #444444;
+    --ink-light: #777777;
+    --accent: #111111;
+    --line: #cccccc;
+    --chapter-bg: #111111;
+    --chapter-text: #ffffff;
+    --code-bg: #f0f0f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    color: var(--ink);
+    touch-action: none;
+    user-select: none;
+  }
+
+  /* COVER */
+  #cover {
+    position: fixed;
+    inset: 0;
+    background: #111111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transform-origin: left center;
+    transition: transform 0.9s cubic-bezier(0.77,0,0.18,1), opacity 0.6s;
+  }
+  #cover.open {
+    transform: perspective(1400px) rotateY(-180deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cover-border-outer {
+    position: absolute;
+    inset: 14px;
+    border: 1px solid rgba(255,255,255,0.35);
+    pointer-events: none;
+  }
+  .cover-border-inner {
+    position: absolute;
+    inset: 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+    pointer-events: none;
+  }
+  .cover-corner {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-color: #ffffff;
+    border-style: solid;
+    opacity: 0.9;
+  }
+  .cover-corner.tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; }
+  .cover-corner.tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; }
+  .cover-corner.bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; }
+  .cover-corner.br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; }
+  .cover-inner {
+    position: relative;
+    text-align: center;
+    padding: 40px 32px;
+    z-index: 1;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .cover-eyebrow {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 8vw, 48px);
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .cover-title-accent { color: #ffffff; display: block; }
+  .cover-subtitle {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 40px;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+  .cover-rule {
+    width: 60px; height: 1px;
+    background: rgba(255,255,255,0.5);
+    margin: 0 auto 36px;
+  }
+  .cover-btn {
+    padding: 15px 50px;
+    border: 2px solid rgba(255,255,255,0.8);
+    background: transparent;
+    color: #ffffff;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+  .cover-btn:hover, .cover-btn:active { background: #ffffff; color: #111111; }
+
+  /* BOOK */
+  #book {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* PAGE */
+  .page {
+    position: absolute;
+    inset: 0;
+    background: var(--page-bg);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+  }
+  .page.active { display: flex; }
+
+  .page.flip-out-left {
+    animation: flipOutLeft 0.52s cubic-bezier(0.55,0.085,0.68,0.53) both;
+    transform-origin: left center;
+    z-index: 10;
+  }
+  .page.flip-in-right {
+    animation: flipInRight 0.52s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    transform-origin: left center;
+    z-index: 9;
+  }
+  .page.flip-out-right {
+    animation: flipOutRight 0.52s cubic-bezier(0.55,0.085,0.68,0.53) both;
+    transform-origin: right center;
+    z-index: 10;
+  }
+  .page.flip-in-left {
+    animation: flipInLeft 0.52s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    transform-origin: right center;
+    z-index: 9;
+  }
+
+  @keyframes flipOutLeft {
+    0%   { transform: perspective(1200px) rotateY(0deg); filter: brightness(1); }
+    60%  { transform: perspective(1200px) rotateY(-90deg) translateZ(30px); filter: brightness(0.7); }
+    100% { transform: perspective(1200px) rotateY(-180deg); opacity: 0; filter: brightness(0.3); }
+  }
+  @keyframes flipInRight {
+    0%   { transform: perspective(1200px) rotateY(180deg); opacity: 0; filter: brightness(0.3); }
+    40%  { transform: perspective(1200px) rotateY(90deg) translateZ(30px); opacity: 1; filter: brightness(0.7); }
+    100% { transform: perspective(1200px) rotateY(0deg); filter: brightness(1); }
+  }
+  @keyframes flipOutRight {
+    0%   { transform: perspective(1200px) rotateY(0deg); filter: brightness(1); }
+    60%  { transform: perspective(1200px) rotateY(90deg) translateZ(30px); filter: brightness(0.7); }
+    100% { transform: perspective(1200px) rotateY(180deg); opacity: 0; filter: brightness(0.3); }
+  }
+  @keyframes flipInLeft {
+    0%   { transform: perspective(1200px) rotateY(-180deg); opacity: 0; filter: brightness(0.3); }
+    40%  { transform: perspective(1200px) rotateY(-90deg) translateZ(30px); opacity: 1; filter: brightness(0.7); }
+    100% { transform: perspective(1200px) rotateY(0deg); filter: brightness(1); }
+  }
+
+  /* PAGE CREASE */
+  .page::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.07), transparent);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .page::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: linear-gradient(270deg, rgba(0,0,0,0.07), transparent);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    padding: 10px 20px 8px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background: #fafafa;
+  }
+  .page-chapter-tag {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    font-weight: 400;
+  }
+  .page-num {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    color: #999;
+    letter-spacing: 1px;
+  }
+
+  /* CHAPTER SEPARATOR PAGE */
+  .chapter-page {
+    background: #111111 !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff;
+  }
+  .chapter-page::before, .chapter-page::after { display: none; }
+  .chapter-page .chapter-content {
+    padding: 40px 32px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .chapter-roman {
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    color: rgba(255,255,255,0.12);
+    line-height: 1;
+    margin-bottom: 12px;
+    font-style: italic;
+    letter-spacing: -2px;
+  }
+  .chapter-num-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .chapter-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 6vw, 30px);
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  .chapter-divider {
+    width: 50px; height: 1px;
+    background: rgba(255,255,255,0.4);
+    margin: 0 auto 18px;
+  }
+  .chapter-desc {
+    font-family: 'Lora', serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.5px;
+    line-height: 2;
+    font-style: italic;
+  }
+  .chapter-swipe-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 0; right: 0;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.25);
+    text-align: center;
+  }
+
+  /* PAGE CONTENT */
+  .page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page-content::-webkit-scrollbar { width: 3px; }
+  .page-content::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 2px; }
+
+  /* QUESTION LABEL */
+  .q-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  /* QUESTION TEXT */
+  .question {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(14px, 4vw, 17px);
+    font-weight: 700;
+    color: #111111;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #111111;
+  }
+
+  /* ANS LABEL */
+  .ans-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #555;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* INTRO */
+  .intro {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #222;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    font-style: normal;
+  }
+
+  /* POINTS */
+  .point {
+    margin-bottom: 11px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eeeeee;
+  }
+  .point:last-child { border-bottom: none; margin-bottom: 0; }
+  .point-title {
+    font-family: 'Lora', serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #111111;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .point-title::before {
+    content: attr(data-num);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    color: #888;
+    font-weight: 400;
+    flex-shrink: 0;
+  }
+  .point-body {
+    font-family: 'Lora', serif;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #333;
+    padding-left: 22px;
+    font-weight: 400;
+  }
+
+  /* STEPS */
+  .step {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eeeeee;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: #111111;
+    padding: 3px 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+  .step-body {
+    font-family: 'Lora', serif;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #333;
+    font-weight: 400;
+  }
+
+  /* CODE INLINE */
+  .code-inline {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #111;
+  }
+
+  /* QUESTION BANK TAG */
+  .qbank-tag {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: #111111;
+    display: inline-block;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+  }
+
+  /* NAV BAR */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: #ffffff;
+    border-top: 1px solid #dddddd;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  }
+  .nav-btn {
+    width: 38px; height: 38px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: #111;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn:active { background: #111; color: #fff; }
+  .nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+  #nav-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: #555;
+    text-align: center;
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  /* MENU BUTTON */
+  #menu-btn {
+    position: fixed;
+    top: 12px; right: 14px;
+    width: 38px; height: 38px;
+    background: #111111;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    z-index: 150;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #menu-btn span {
+    display: block;
+    width: 16px; height: 1.5px;
+    background: #ffffff;
+    border-radius: 1px;
+    transition: all 0.3s;
+  }
+  #menu-btn.active span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+  #menu-btn.active span:nth-child(2) { opacity: 0; }
+  #menu-btn.active span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+
+  /* ZOOM CONTROLS */
+  #zoom-controls {
+    position: fixed;
+    top: 12px; left: 14px;
+    display: none;
+    gap: 6px;
+    z-index: 150;
+  }
+  .zoom-btn {
+    width: 32px; height: 32px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #111;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+  }
+  .zoom-btn:active { background: #111; color: #fff; }
+
+  /* NAV PANEL */
+  #nav-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(80vw, 280px);
+    height: 100%;
+    background: #ffffff;
+    border-left: 1px solid #ddd;
+    z-index: 140;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+  }
+  #nav-panel.open { transform: translateX(0); }
+  .nav-panel-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #eee;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    flex-shrink: 0;
+    background: #fafafa;
+  }
+  #nav-items-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  #nav-items-container::-webkit-scrollbar { width: 3px; }
+  #nav-items-container::-webkit-scrollbar-thumb { background: #ddd; }
+  .nav-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .nav-item:hover, .nav-item.active { background: #f0f0f0; }
+  .nav-item.chapter-nav { background: #f8f8f8; }
+  .nav-item.chapter-nav.active { background: #111111; }
+  .nav-item.chapter-nav.active .nav-item-label { color: #ffffff; }
+  .nav-item-num {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    color: #999;
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 20px;
+  }
+  .nav-item-label {
+    font-family: 'Lora', serif;
+    font-size: 11px;
+    color: #333;
+    line-height: 1.4;
+  }
+
+  #nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 139;
+    display: none;
+  }
+  #nav-overlay.show { display: block; }
+
+  /* SWIPE HINT */
+  #swipe-hint {
+    position: fixed;
+    bottom: 65px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #999;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    padding: 6px 14px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    z-index: 120;
+    white-space: nowrap;
+  }
+  #swipe-hint.show { opacity: 1; }
+
+  /* ZOOM WRAPPER */
+  #zoom-wrapper {
+    position: absolute;
+    inset: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div id="cover">
+  <div class="cover-border-outer"></div>
+  <div class="cover-border-inner"></div>
+  <div class="cover-corner tl"></div>
+  <div class="cover-corner tr"></div>
+  <div class="cover-corner bl"></div>
+  <div class="cover-corner br"></div>
+  <div class="cover-inner">
+    <div class="cover-eyebrow">TYBCA · 6TH SEMESTER · NOTES</div>
+    <div class="cover-title">Cloud<span class="cover-title-accent">Computing</span></div>
+    <div class="cover-subtitle">Complete Theory Notes</div>
+    <div class="cover-rule"></div>
+    <button class="cover-btn" onclick="openBook()">START →</button>
+  </div>
+</div>
+
+<!-- UI ELEMENTS -->
+<button id="menu-btn" onclick="toggleNav()">
+  <span></span><span></span><span></span>
+</button>
+<div id="zoom-controls">
+  <button class="zoom-btn" onclick="zoomIn()">+</button>
+  <button class="zoom-btn" onclick="zoomOut()">−</button>
+  <button class="zoom-btn" onclick="zoomReset()" style="font-size:10px;letter-spacing:-1px">1:1</button>
+</div>
+<div id="book">
+  <div id="zoom-wrapper"></div>
+</div>
+<div id="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="goPage(-1)">&#8592;</button>
+  <span id="nav-label"></span>
+  <button class="nav-btn" id="btn-next" onclick="goPage(1)">&#8594;</button>
+</div>
+<div id="nav-panel">
+  <div class="nav-panel-header">Contents</div>
+  <div id="nav-items-container"></div>
+</div>
+<div id="nav-overlay" onclick="closeNav()"></div>
+<div id="swipe-hint">← SWIPE TO NAVIGATE →</div>
+
+<script>
+// ============================================================
+// PAGE DATA — Enhanced with extra content
+// ============================================================
+const pages = [
+
+// Ch1 CHAPTER
+{ type:'chapter', roman:'I', num:'Chapter 01', title:'Introduction to\nLinux Networking', desc:'Boot Loaders · LVM · DHCP Server · RAID Components' },
+
+// Ch1 Q1
+{ type:'question', chap:'Chapter 1', q:'Q1. Write a short note on Linux Boot Loaders.',
+  intro:`A boot loader is a small program that runs when a computer is switched on. Its main job is to find the operating system installed on the hard disk and load it into memory (RAM) so the system can start working. It acts as a bridge between the hardware and the operating system. Without a boot loader, the computer cannot start at all. Modern boot loaders also support advanced features like UEFI, encrypted disks, and network booting.`,
+  points:[
+    { t:'What is a Boot Loader?', b:'A boot loader is the first software that runs after BIOS checks the hardware. It finds the OS stored on the disk and loads it into RAM so the computer can begin working properly. It also passes configuration parameters to the kernel before handing over control.' },
+    { t:'GRUB (Grand Unified Bootloader)', b:'GRUB is the most popular boot loader used in Linux. It supports multiple operating systems and allows the user to choose which OS to boot at startup. GRUB 2 is the latest and most widely used version today, and it also supports UEFI-based systems and encrypted partitions.' },
+    { t:'LILO (Linux Loader)', b:'LILO is one of the oldest Linux boot loaders developed in 1992. It is simple but does not support many advanced features like GRUB, such as network booting or dynamic reconfiguration. It was widely used in older Linux systems but was discontinued in 2015 and is now fully replaced by GRUB.' },
+    { t:'SYSLINUX', b:'SYSLINUX is a lightweight boot loader mainly used for booting Linux from USB drives or CDs. It is commonly used in live Linux systems and installation media. Before GRUB became dominant, SYSLINUX was widely used for booting from removable media and PXE network installations.' },
+    { t:'Boot Process Flow', b:'When the system starts, BIOS/UEFI runs first, then the boot loader is loaded, it finds the Linux kernel, loads it into memory, and finally the Linux OS starts running properly. The kernel then mounts the root file system and starts the init/systemd process to complete booting.' },
+    { t:'Importance of Boot Loaders', b:'Boot loaders are important because they manage multi-boot systems, allow kernel selection, support recovery modes, and provide a startup menu for the user to choose from. They also allow kernel parameters to be passed at boot time for debugging and hardware configuration.' }
+  ]
+},
+
+// Ch1 Q2
+{ type:'question', chap:'Chapter 1', q:'Q2. What is LVM?',
+  intro:`LVM stands for Logical Volume Manager. It is a storage management tool used in Linux that provides a flexible way to manage disk space. Instead of dealing with physical disk partitions directly, LVM creates an abstract layer between the physical disks and the operating system. This makes it easy to resize, add, or remove storage without shutting down the system. LVM is widely used in enterprise Linux environments for its flexibility and snapshot capabilities.`,
+  points:[
+    { t:'Physical Volume (PV)', b:'A Physical Volume is an actual hard disk or partition that is assigned to LVM. It is the raw storage device that LVM uses as its building block. Commands start with pv (e.g., pvcreate). Any block device — including hard drives, SSDs, or RAID arrays — can become a Physical Volume.' },
+    { t:'Volume Group (VG)', b:'A Volume Group is a pool of storage created by combining one or more Physical Volumes. It is like a big virtual hard disk from which logical volumes can be created. Commands start with vg (e.g., vgcreate). Multiple disks can be combined into one Volume Group seamlessly.' },
+    { t:'Logical Volume (LV)', b:'A Logical Volume is the actual usable partition created from a Volume Group. It works like a regular partition where you can create a file system. Commands start with lv (e.g., lvcreate). Logical Volumes can span multiple physical disks unlike traditional partitions.' },
+    { t:'Dynamic Resizing', b:'One of the biggest advantages of LVM is that you can increase or decrease the size of a logical volume at any time without reformatting the disk or stopping the system. This is done using lvextend and lvreduce commands, and resizing can even be done on mounted volumes.' },
+    { t:'Snapshots', b:'LVM allows you to take snapshots of a logical volume — a point-in-time copy of data. This is very useful for taking consistent backups without downtime. Snapshots only store the differences (changes) from the original, making them very storage-efficient and fast to create.' },
+    { t:'Advantages of LVM', b:'LVM makes disk management easy. You can combine multiple disks into one, resize volumes on the fly, take backups using snapshots, and manage storage centrally without reinstalling the OS. It is the preferred storage management solution in enterprise Linux and cloud environments.' }
+  ]
+},
+
+// Ch1 Q3
+{ type:'question', chap:'Chapter 1', q:'Q3. Write steps to configure DHCP server.',
+  intro:`DHCP stands for Dynamic Host Configuration Protocol. A DHCP server automatically assigns IP addresses and network settings (like gateway and DNS) to devices on a network. Without it, every device would need a manually configured IP address. Setting up a DHCP server in Linux involves installing the package, editing the config file, and starting the service. DHCP reduces manual configuration errors and makes network administration much more efficient.`,
+  steps:[
+    { n:'Step 1', b:'Install the DHCP server package using the command: <span class="code-inline">sudo apt install isc-dhcp-server</span> (Ubuntu/Debian) or <span class="code-inline">yum install dhcp</span> (RHEL/CentOS). This installs the ISC DHCP server, which is the most widely used DHCP implementation on Linux.' },
+    { n:'Step 2', b:'Assign a static IP address to the server\'s network interface, as the DHCP server itself must have a fixed IP address to function properly. Use <span class="code-inline">/etc/network/interfaces</span> or <span class="code-inline">nmcli</span> to configure the static IP before proceeding.' },
+    { n:'Step 3', b:'Open the configuration file: <span class="code-inline">/etc/dhcp/dhcpd.conf</span> and define subnet details, IP range, gateway, and DNS settings. This file controls the entire DHCP behavior including lease duration and scope definitions.' },
+    { n:'Step 4', b:'Set the IP range from which addresses will be assigned. Example: <span class="code-inline">range 192.168.1.100 192.168.1.200;</span> and set <span class="code-inline">option routers</span> and <span class="code-inline">option domain-name-servers</span>. You can also define fixed IP reservations using the client\'s MAC address.' },
+    { n:'Step 5', b:'Specify the network interface that the DHCP server should listen on by editing <span class="code-inline">/etc/default/isc-dhcp-server</span> and setting the interface name. For example, set <span class="code-inline">INTERFACESv4="eth0"</span> to listen only on the internal network interface.' },
+    { n:'Step 6', b:'Start and enable the DHCP service using: <span class="code-inline">sudo systemctl restart isc-dhcp-server</span> and <span class="code-inline">sudo systemctl enable isc-dhcp-server</span> to make it run on boot. Verify operation by checking <span class="code-inline">systemctl status isc-dhcp-server</span> and reviewing lease logs in <span class="code-inline">/var/lib/dhcp/dhcpd.leases</span>.' }
+  ]
+},
+
+// Ch1 Q4
+{ type:'question', chap:'Chapter 1', q:'Q4. What are the basic components of RAID?',
+  intro:`RAID stands for Redundant Array of Independent Disks. It is a technology that combines multiple hard drives into one logical unit to improve data performance, increase storage capacity, and protect data from disk failures. RAID works by using techniques like striping, mirroring, and parity across multiple disks. It is widely used in servers and enterprise storage systems to ensure data reliability and continuous operation even in the event of hardware failure.`,
+  points:[
+    { t:'Multiple Hard Drives / Disks', b:'The core component of RAID is two or more physical hard drives or SSDs. These drives work together as one unit. The number of disks required depends on the RAID level chosen. Higher RAID levels require more disks but provide better fault tolerance and performance.' },
+    { t:'RAID Controller', b:'A RAID controller is hardware or software that manages the disks in the RAID array. It handles all operations like reading, writing, and rebuilding data. It can be a dedicated hardware card or software built into the OS. Hardware RAID controllers offer better performance and have their own dedicated cache memory.' },
+    { t:'Striping', b:'Striping divides data into blocks and spreads them across multiple disks. This increases read/write speed because multiple disks work in parallel. RAID 0 uses only striping but offers no fault tolerance, making it suitable only for non-critical, high-performance applications.' },
+    { t:'Mirroring', b:'Mirroring creates an exact copy of all data on a second disk. If one disk fails, the other has the complete data. RAID 1 uses mirroring and is used where data safety is most important. The trade-off is that only 50% of total disk capacity is usable since everything is duplicated.' },
+    { t:'Parity', b:'Parity is a calculated value used to recover data if a disk fails. It stores error-checking information across the disks. RAID 5 and RAID 6 use distributed parity to allow recovery from one or two disk failures respectively, making them the most common choice for servers.' },
+    { t:'RAID Levels (0, 1, 5, 10)', b:'Different RAID levels offer different combinations of speed, safety, and storage capacity. RAID 0 = speed, RAID 1 = safety, RAID 5 = balance of both, RAID 10 = best performance and redundancy combined. RAID 10 requires a minimum of four disks and is preferred in high-performance database environments.' }
+  ]
+},
+
+// Ch2 CHAPTER
+{ type:'chapter', roman:'II', num:'Chapter 02', title:'Introduction to\nVirtualization', desc:'Types of Virtualization · Advantages · Relationship with Cloud' },
+
+// Ch2 Q1
+{ type:'question', chap:'Chapter 2', q:'Q1. Explain the different types of virtualization.',
+  intro:`Virtualization is the process of creating virtual versions of physical resources like servers, storage, and networks using software. Instead of having one physical machine do one task, virtualization allows one machine to run many virtual environments at the same time. This saves hardware costs and improves efficiency. Virtualization is the core technology behind modern cloud computing and is used extensively in data centers around the world.`,
+  points:[
+    { t:'Server Virtualization', b:'Server virtualization divides one physical server into multiple virtual servers using a hypervisor. Each virtual server runs its own OS and applications independently. It is the most common form used in data centers and cloud platforms like AWS. This allows organizations to consolidate many servers onto fewer physical machines, reducing cost and energy consumption.' },
+    { t:'Storage Virtualization', b:'Storage virtualization pools physical storage from multiple devices into one logical storage unit. Users can access this storage without knowing its physical location. It makes storage management easier and more flexible. Technologies like SAN and NFS use storage virtualization to serve storage across networks.' },
+    { t:'Network Virtualization', b:'Network virtualization decouples network functions like routing and switching from physical hardware. It creates software-defined networks (SDN). AWS VPC is an example where users create virtual networks without touching physical routers. It allows multiple isolated virtual networks to run on the same physical network infrastructure.' },
+    { t:'Desktop Virtualization', b:'Desktop virtualization runs user desktops on a remote server. Users can access their desktop from any device over the internet. It is secure and easy to manage since all data stays on the server, and IT teams can centrally manage and patch all desktops from one location.' },
+    { t:'Application Virtualization', b:'Application virtualization wraps an application in a virtual layer so it can run on any device without installation. The app runs on a server but appears on the user\'s screen. Example: using Microsoft Excel on an iPad via Citrix. It eliminates software compatibility issues across different operating systems.' },
+    { t:'Data Virtualization', b:'Data virtualization collects data from different sources and presents it in one place without moving the actual data. Users access a virtual view of data from multiple systems in real-time through cloud services. It is used in Business Intelligence and analytics platforms to provide a unified view of distributed data.' }
+  ]
+},
+
+// Ch2 Q2
+{ type:'question', chap:'Chapter 2', q:'Q2. State the advantages of virtualization.',
+  intro:`Virtualization offers many powerful benefits to organizations. By allowing multiple virtual machines to run on a single physical server, it dramatically reduces hardware costs, improves efficiency, and simplifies IT management. Today, virtualization is the foundation of modern cloud computing and enterprise IT infrastructure. Organizations that adopt virtualization can significantly reduce their IT spending while improving performance and reliability.`,
+  points:[
+    { t:'Cost Savings', b:'Organizations can reduce the number of physical servers needed by running multiple virtual machines on one server. This cuts hardware purchase costs, electricity bills, and data center space costs significantly. Studies show that server consolidation through virtualization can reduce hardware costs by up to 70%.' },
+    { t:'Better Resource Utilization', b:'Without virtualization, a server may use only 10–15% of its capacity. Virtualization allows multiple VMs to share the same physical hardware, increasing utilization to 70–80% and eliminating wasted resources. This means organizations get much more value from the hardware they already own.' },
+    { t:'Easy Scalability', b:'New virtual machines can be created in minutes without buying new hardware. As demand increases, resources like CPU and RAM can be dynamically allocated to VMs, making scaling up or down very fast and simple. Organizations can respond to changing business demands almost instantly.' },
+    { t:'Improved Disaster Recovery', b:'Virtual machines can be backed up as image files and quickly restored if something goes wrong. Snapshots can capture the exact state of a VM at any point, making recovery from failures fast and reliable. VM backups can be moved to different physical hardware, allowing recovery even if the original server fails completely.' },
+    { t:'Isolation and Security', b:'Each virtual machine is completely isolated from others. If one VM gets infected by malware or crashes, it does not affect other VMs running on the same physical server, improving overall security. This isolation also makes it safer to run untrusted or experimental software in a VM.' },
+    { t:'Testing and Development', b:'Developers can create isolated test environments using VMs without affecting the production system. Different OS versions can be tested on the same machine, saving time and hardware resources for development teams. VMs can be quickly created, cloned, and deleted to support agile development workflows.' }
+  ]
+},
+
+// Ch2 Q3
+{ type:'question', chap:'Chapter 2', q:'Q3. Explain the relationship between Virtualization & Cloud Computing.',
+  intro:`Virtualization and cloud computing are closely related technologies. Virtualization is the foundation on which cloud computing is built. Without virtualization, modern cloud computing would not be possible. While virtualization creates virtual resources, cloud computing delivers those resources to users over the internet as a service. Understanding this relationship is key to understanding how cloud providers like AWS, Azure, and Google Cloud operate at scale.`,
+  points:[
+    { t:'Virtualization Enables Cloud', b:'Cloud providers like AWS and Azure use virtualization to create thousands of virtual machines from their physical servers. These VMs are then rented to users as cloud services (IaaS, PaaS, SaaS). Without virtualization, each customer would need their own dedicated physical server, making cloud computing economically impractical.' },
+    { t:'Key Difference', b:'Virtualization is a technology that creates simulated hardware environments, while cloud computing is a service delivery model. Virtualization can exist without the cloud (on-premises), but cloud computing requires virtualization to work efficiently. Cloud adds billing, self-service, and internet delivery on top of virtualization.' },
+    { t:'Resource Sharing', b:'Through virtualization, cloud providers can serve thousands of customers using the same physical hardware. Each customer gets their own isolated virtual environment without knowing they are sharing hardware with others. This multi-tenancy model is what makes cloud computing affordable and scalable.' },
+    { t:'Hypervisor is the Bridge', b:'The hypervisor is the software that sits between physical hardware and virtual machines. Cloud platforms use hypervisors (like VMware ESXi or KVM) to create and manage VMs that are offered as cloud instances to users. AWS uses its custom Nitro hypervisor for improved performance and security isolation.' },
+    { t:'Scalability through Virtualization', b:'Cloud computing\'s ability to scale resources instantly is powered by virtualization. New VMs can be created, resized, or deleted in seconds, allowing the cloud to provide on-demand resources to millions of users. Auto-scaling groups in AWS and Azure rely entirely on this virtualization capability.' },
+    { t:'Cloud Goes Beyond Virtualization', b:'While virtualization provides virtual hardware, cloud computing adds automation, self-service portals, pay-as-you-go billing, and global network access. Cloud computing is a complete service model built on top of virtualization. It also adds managed services, CDN, AI/ML platforms, and databases that go far beyond what virtualization alone provides.' }
+  ]
+},
+
+// Ch3 CHAPTER
+{ type:'chapter', roman:'III', num:'Chapter 03', title:'Virtualization for\nEnterprise', desc:'Hypervisor · VMware ESXi · Storage Area Network · VLAN' },
+
+// Ch3 Q1
+{ type:'question', chap:'Chapter 3', q:'Q1. What is a Hypervisor?',
+  intro:`A hypervisor is a software layer that sits between the physical hardware and the virtual machines (VMs). It is the core technology that makes virtualization possible. The hypervisor allocates physical resources like CPU, RAM, and storage to each virtual machine and ensures complete isolation between them. It is also called a Virtual Machine Monitor (VMM). Modern hypervisors are highly optimized and power millions of virtual machines across global cloud providers.`,
+  points:[
+    { t:'Role of Hypervisor', b:'The hypervisor manages all virtual machines on a physical server. It controls how much CPU, memory, storage, and network bandwidth each VM gets. It ensures VMs do not interfere with each other. The hypervisor also handles hardware interrupts and translates VM requests into physical hardware operations.' },
+    { t:'Type 1 – Bare Metal Hypervisor', b:'Type 1 hypervisors run directly on the physical hardware without any host operating system. They offer better performance and are used in enterprise data centers. Examples: VMware ESXi, Microsoft Hyper-V, Citrix XenServer. They have full, direct control over hardware resources, resulting in minimal overhead.' },
+    { t:'Type 2 – Hosted Hypervisor', b:'Type 2 hypervisors run on top of an existing operating system like Windows or macOS. They are easy to install and used for personal testing and development. Examples: VMware Workstation, Oracle VirtualBox. They are slower than Type 1 because VM requests must pass through the host OS before reaching hardware.' },
+    { t:'Resource Allocation', b:'When you create a VM, you assign it a portion of the physical resources (e.g., 2 CPU cores, 4 GB RAM). The hypervisor ensures these resources are delivered to the VM and manages conflicts between multiple VMs. It also supports overcommitment — allocating more virtual resources than physically available, trusting VMs won\'t all use peak resources simultaneously.' },
+    { t:'Isolation Between VMs', b:'The hypervisor provides complete isolation between virtual machines. If one VM crashes or is attacked by malware, it does not affect other VMs on the same physical server. This strong isolation is a key security feature in multi-tenant cloud environments where different customers share the same physical hardware.' },
+    { t:'Importance in Cloud', b:'All major cloud providers use hypervisors to run millions of virtual machines. AWS uses its custom Nitro hypervisor, Google Cloud uses KVM, and VMware environments use ESXi to power cloud infrastructure globally. Modern hypervisors also support hardware-assisted virtualization via Intel VT-x and AMD-V for near-native performance.' }
+  ]
+},
+
+// Ch3 Q2
+{ type:'question', chap:'Chapter 3', q:'Q2. Explain the different types of hypervisors.',
+  intro:`Hypervisors are classified into two main types — Type 1 (bare-metal) and Type 2 (hosted). The key difference is where the hypervisor runs — directly on hardware or on top of an existing OS. Choosing the right type depends on the use case, performance needs, and environment (production vs. development). Both types play important roles in modern IT and cloud computing infrastructure.`,
+  points:[
+    { t:'Type 1 – Bare Metal Hypervisor', b:'A Type 1 hypervisor is installed directly on the physical server hardware, without any underlying operating system. It has full control over hardware resources, which gives it maximum performance, stability, and security. It is the standard choice for production data centers and enterprise cloud platforms.' },
+    { t:'Examples of Type 1', b:'Common Type 1 hypervisors include VMware ESXi, Microsoft Hyper-V (Windows Server), Citrix XenServer, and KVM (Linux kernel-based). AWS, Azure, and Google Cloud all use Type 1 hypervisors to power their cloud infrastructure. KVM is open-source and is widely used in Linux-based cloud platforms.' },
+    { t:'Type 2 – Hosted Hypervisor', b:'A Type 2 hypervisor runs on top of an existing host operating system like Windows 10 or macOS. The VM requests must pass through the host OS before reaching the hardware, which adds overhead and reduces performance compared to Type 1. However, it is much easier to install and use on personal computers.' },
+    { t:'Examples of Type 2', b:'Common Type 2 hypervisors include VMware Workstation, Oracle VirtualBox, and Parallels Desktop (for Mac). They are easy to install and ideal for developers who need to test software on multiple operating systems on their personal computer. VirtualBox is free and open-source, making it very popular for learning and development.' },
+    { t:'Performance Comparison', b:'Type 1 hypervisors offer better performance because they directly access hardware. Type 2 hypervisors have slower performance due to the extra OS layer. For critical business applications, Type 1 is always preferred over Type 2. The performance gap is most noticeable in CPU-intensive and I/O-heavy workloads.' },
+    { t:'Use Case Comparison', b:'Type 1 is used in enterprise data centers, cloud platforms, and production servers. Type 2 is used for personal testing, development environments, and learning virtualization without needing dedicated server hardware. Developers commonly use Type 2 hypervisors for running different OS environments on their laptops.' }
+  ]
+},
+
+// Ch3 Q3
+{ type:'question', chap:'Chapter 3', q:'Q3. Write a short note on VMware ESXi.',
+  intro:`VMware ESXi is a Type 1 bare-metal hypervisor developed by VMware Inc. It is one of the most widely used virtualization platforms in enterprise environments. ESXi installs directly on a physical server without a traditional operating system, giving it maximum performance and efficiency for running virtual machines. It is the core component of VMware's vSphere virtualization platform and is trusted by thousands of enterprises worldwide.`,
+  points:[
+    { t:'What is ESXi?', b:'ESXi stands for Elastic Sky X Integrated. It is a lightweight, enterprise-grade hypervisor that runs directly on physical server hardware. ESXi does not require a host OS, making it highly efficient, fast, and stable for running virtual workloads. Its footprint is very small — under 200MB — making it easy to boot from USB or SD card.' },
+    { t:'Architecture', b:'ESXi includes a microkernel called VMkernel that manages hardware resources and provides services to VMs. It handles CPU scheduling, memory management, storage access, and network traffic entirely in software without depending on a general-purpose OS. The microkernel architecture reduces attack surface and improves stability.' },
+    { t:'Resource Management', b:'ESXi manages CPU, RAM, storage, and network resources for all VMs. When you create a VM, you allocate portions of these resources. ESXi ensures each VM gets its share and resolves resource contention between multiple VMs on the same host using advanced scheduling algorithms.' },
+    { t:'vCenter Server Integration', b:'ESXi works with VMware vCenter Server to enable advanced features like vMotion (live VM migration between servers with zero downtime), High Availability (automatic VM restart on failure), and DRS (automated load balancing). These features make it possible to manage hundreds of ESXi hosts as a single unified platform.' },
+    { t:'Security Features', b:'ESXi includes built-in security features like VLAN support for network isolation, firewalls, secure boot, and encrypted VM storage. It also integrates with NSX for advanced network security in large virtualized environments. Regular security patches are released by VMware to address vulnerabilities.' },
+    { t:'Use in Enterprise', b:'VMware ESXi is widely used in enterprise data centers, private clouds, and virtual desktop infrastructure (VDI). It supports thousands of VMs on a single physical server and provides the reliability needed for business-critical applications. It also supports integration with major storage vendors and backup solutions.' }
+  ]
+},
+
+// Ch3 Q4
+{ type:'question', chap:'Chapter 3', q:'Q4. What is a Storage Area Network (SAN)?',
+  intro:`A Storage Area Network (SAN) is a specialized high-speed network that connects servers to shared storage devices like disk arrays. Unlike normal storage connected directly to a server, a SAN makes storage available over the network, allowing multiple servers to access the same storage resources. SANs are commonly used in enterprise environments where large amounts of fast and reliable storage are needed. They form the backbone of storage infrastructure in hospitals, banks, and large data centers.`,
+  points:[
+    { t:'Definition of SAN', b:'A SAN is a dedicated network specifically designed for storage communication. It connects servers to storage arrays using high-speed protocols, presenting remote storage as if it were a local hard disk attached directly to the server. This abstraction makes storage management flexible and centralized.' },
+    { t:'Protocols Used', b:'SANs use two main protocols: Fibre Channel (FC), which is very fast and used in large enterprises, and iSCSI (Internet SCSI), which sends SCSI commands over standard TCP/IP networks. iSCSI is popular because it uses existing Ethernet infrastructure, making SAN accessible to smaller organizations without expensive FC hardware.' },
+    { t:'Components of SAN', b:'A SAN consists of storage arrays (disk systems), SAN switches (to connect servers and storage), Host Bus Adapters (HBAs installed in servers), and SAN management software to monitor and control the entire storage network. All components must work together to deliver consistent, high-performance storage access.' },
+    { t:'Block-Level Storage', b:'SAN provides block-level storage access. This means the server sees the SAN storage as raw disk blocks, just like a local hard drive. The server can then format and use it with any file system (ext4, NTFS, VMFS, etc.). This block-level access is essential for databases and virtualization platforms like VMware.' },
+    { t:'Advantages of SAN', b:'SAN offers very high performance, centralized storage management, and high availability. Multiple servers can share the same storage pool. If one server fails, another can quickly access the same data without data loss or long recovery time. SANs also support storage tiering, thin provisioning, and replication for disaster recovery.' },
+    { t:'SAN vs NAS', b:'SAN provides block-level storage over a dedicated network and is used for high-performance applications like databases. NAS (Network Attached Storage) provides file-level storage over standard Ethernet and is used for file sharing and home directories. SAN is faster and more expensive; NAS is simpler and more cost-effective for general file sharing.' }
+  ]
+},
+
+// Ch3 Q5
+{ type:'question', chap:'Chapter 3', q:'Q5. What are the key benefits of VLAN?',
+  intro:`VLAN stands for Virtual Local Area Network. It is a technology that logically divides a single physical network into multiple smaller, isolated networks. VLANs allow network administrators to group devices by function or department rather than by physical location. They improve network performance, security, and manageability without requiring separate physical hardware. VLANs are a fundamental technology in modern enterprise networking and data center design.`,
+  points:[
+    { t:'Enhanced Security', b:'VLANs isolate sensitive traffic by separating network segments. For example, the Finance department can be on a different VLAN from the Marketing department. This prevents unauthorized access to sensitive data even if devices share the same physical switch. VLANs also limit the spread of malware by containing infected devices to their VLAN.' },
+    { t:'Improved Performance', b:'VLANs reduce broadcast traffic by limiting broadcast domains. Broadcast packets stay within their VLAN and do not flood the entire network. This reduces congestion and improves overall network speed and efficiency. Smaller broadcast domains mean less wasted bandwidth and faster network response times.' },
+    { t:'Simplified Management', b:'Administrators can group users and devices logically by department or function, regardless of their physical location. Moving a user to a different department only requires a software configuration change — no physical cable rewiring is needed. This significantly reduces the time and cost of network changes in large organizations.' },
+    { t:'Flexibility and Scalability', b:'VLANs can be easily created, modified, or deleted through software configuration. As an organization grows, new VLANs can be added quickly. Devices can be added to any VLAN without changing the physical network infrastructure. This makes VLANs an ideal solution for organizations that change frequently.' },
+    { t:'Cost Reduction', b:'VLANs allow multiple logical networks to share the same physical infrastructure. This eliminates the need to buy separate switches, cables, and routers for each department, resulting in significant hardware cost savings. Organizations can also reduce rack space, power consumption, and cooling costs in their data centers.' },
+    { t:'Traffic Isolation in Virtualization', b:'In VMware ESXi environments, VLANs are used to separate VM traffic, management traffic, and storage traffic on the same physical network adapters. This ensures clean, isolated communication between different types of network traffic. Proper VLAN design in virtualized environments is critical for both performance and security.' }
+  ]
+},
+
+// Ch4 CHAPTER
+{ type:'chapter', roman:'IV', num:'Chapter 04', title:'Cloud Computing\nFundamentals', desc:'Characteristics · Deployment Models · Service Models · Risks' },
+
+// Ch4 Q1
+{ type:'question', chap:'Chapter 4', q:'Q1. Explain in detail the Characteristics of Cloud Computing.',
+  intro:`Cloud computing has five essential characteristics defined by NIST (National Institute of Standards and Technology). These characteristics distinguish cloud computing from traditional IT and explain why it is so powerful, flexible, and widely adopted by organizations of all sizes around the world. These NIST-defined characteristics serve as the standard definition of what qualifies as true cloud computing versus traditional hosted services.`,
+  points:[
+    { t:'On-Demand Self-Service', b:'Users can access and provision computing resources like server space, storage, or network bandwidth automatically, without requiring human interaction with the service provider. Users get what they need when they need it, just by clicking a button in a web portal. This self-service capability dramatically reduces the time to provision new resources from weeks to minutes.' },
+    { t:'Broad Network Access', b:'Cloud services are available over the internet and can be accessed from any device — laptops, smartphones, tablets, or desktop computers. Users can connect from any location as long as they have an internet connection, enabling remote work and mobility. This device-independent access is a key reason why cloud enables digital transformation.' },
+    { t:'Resource Pooling', b:'The cloud provider pools physical and virtual resources to serve multiple customers simultaneously using a multi-tenant model. Resources like CPU, memory, and storage are dynamically assigned based on demand. Customers usually do not know the exact physical location of their resources, though some providers allow region selection for compliance.' },
+    { t:'Rapid Elasticity', b:'Cloud resources can be scaled up or down quickly and automatically based on demand. If a website suddenly gets heavy traffic, more servers can be added instantly. When traffic drops, extra resources are released. This gives the impression of unlimited computing capacity and prevents businesses from paying for idle infrastructure.' },
+    { t:'Measured Service', b:'Cloud usage is tracked, measured, and reported. Users pay only for what they actually use — like a utility bill for electricity. This brings transparency to both the provider and the user, helping organizations control and optimize their cloud spending. Detailed billing reports allow teams to identify and eliminate wasteful resource usage.' },
+    { t:'Additional Characteristics', b:'Beyond NIST\'s five, cloud computing also features high availability, automatic updates, multitenancy, and built-in disaster recovery. These make cloud computing highly reliable, cost-efficient, and suitable for businesses of any size globally. Geographic redundancy across multiple data centers ensures service continuity even during regional outages.' }
+  ]
+},
+
+// Ch4 Q2
+{ type:'question', chap:'Chapter 4', q:'Q2. What are the Deployment Models of Cloud Computing?',
+  intro:`Cloud computing deployment models define how cloud infrastructure is set up and who has access to it. There are four main deployment models defined by NIST — Public, Private, Hybrid, and Community Cloud. Each model has its own advantages and is suited for different types of organizations and use cases. Choosing the right deployment model is a critical decision that affects cost, security, compliance, and flexibility.`,
+  points:[
+    { t:'Public Cloud', b:'In a public cloud, infrastructure is owned and managed by a third-party provider and services are offered over the internet to anyone who wants to use them. Examples include AWS, Microsoft Azure, and Google Cloud. It is the most cost-effective model as resources are shared among many customers, and organizations benefit from the provider\'s massive scale investments.' },
+    { t:'Private Cloud', b:'A private cloud is built and used exclusively by a single organization. It can be hosted on-premises in the organization\'s data center or by a third party. It offers more control, security, and customization than public cloud but is more expensive to maintain. It is preferred by industries with strict data privacy requirements like banking and defense.' },
+    { t:'Hybrid Cloud', b:'A hybrid cloud combines both public and private clouds, allowing data and applications to move between them. Organizations keep sensitive data in the private cloud while using the public cloud for less sensitive workloads or during peak demand. It offers the best of both worlds and is the most popular model in large enterprises today.' },
+    { t:'Community Cloud', b:'A community cloud is shared by several organizations with similar requirements, such as government agencies, hospitals, or universities. They share the infrastructure and costs. It offers more privacy than public cloud but more cost sharing than private cloud. Community clouds are common in healthcare for sharing patient data securely.' },
+    { t:'Choosing the Right Model', b:'Small businesses typically use public cloud for low cost. Large enterprises with strict security needs prefer private or hybrid cloud. Government and healthcare organizations often use community cloud to meet regulatory compliance requirements. The right choice depends on budget, data sensitivity, technical capability, and regulatory obligations.' },
+    { t:'Multi-Cloud Strategy', b:'Many organizations today use a multi-cloud approach — using services from more than one cloud provider (e.g., AWS and Azure together). This avoids vendor lock-in, provides redundancy, and allows organizations to pick the best service from each provider. Multi-cloud also gives organizations negotiating leverage on pricing with cloud vendors.' }
+  ]
+},
+
+// Ch4 Q3
+{ type:'question', chap:'Chapter 4', q:'Q3. Explain different Service Models used in Cloud Computing.',
+  intro:`Cloud computing offers three main service models — IaaS, PaaS, and SaaS. These models define what the cloud provider manages and what the customer manages. As you move from IaaS to SaaS, the provider manages more and the customer has less control, but also less responsibility for maintaining the underlying infrastructure. Understanding these models helps organizations choose the right level of cloud service for each of their applications.`,
+  points:[
+    { t:'IaaS – Infrastructure as a Service', b:'IaaS provides virtualized computing infrastructure — servers, storage, and networking — over the internet. The customer manages the OS, applications, and data, while the provider manages physical hardware. Examples: AWS EC2, Microsoft Azure VMs, Google Compute Engine. IaaS gives the maximum control and flexibility of all cloud service models.' },
+    { t:'PaaS – Platform as a Service', b:'PaaS provides a complete development platform including the OS, databases, runtime, and development tools. Developers build and deploy applications without worrying about managing the underlying infrastructure. Examples: Google App Engine, Microsoft Azure App Service, Heroku. PaaS accelerates application development by handling infrastructure concerns automatically.' },
+    { t:'SaaS – Software as a Service', b:'SaaS provides fully ready-to-use software applications over the internet on a subscription basis. Users just open a browser and use the software — no installation or maintenance required. Examples: Gmail, Microsoft 365, Google Docs, Salesforce, Dropbox. SaaS is the most widely used cloud service model by end users and businesses worldwide.' },
+    { t:'Comparison of Models', b:'IaaS gives the most control but requires technical expertise. PaaS reduces the management burden for developers. SaaS is the easiest to use with no technical management required. IaaS is best for IT teams, PaaS for developers, and SaaS for end users. Each model serves a different level in the technology stack.' },
+    { t:'Responsibility Model', b:'In IaaS, the customer manages OS, apps, and data. In PaaS, the customer manages only apps and data. In SaaS, the provider manages everything — the customer only uses the application. This is called the Shared Responsibility Model in cloud security. Understanding this model is critical for proper security planning in cloud environments.' },
+    { t:'Emerging Models', b:'Beyond IaaS, PaaS, and SaaS, newer models include FaaS (Function as a Service, also called Serverless) and CaaS (Containers as a Service). These allow even more flexibility and granular control over cloud workloads for modern application development. Serverless computing in particular eliminates the need to manage any server infrastructure at all.' }
+  ]
+},
+
+// Ch4 Q4
+{ type:'question', chap:'Chapter 4', q:'Q4. Explain the risks of Cloud Computing.',
+  intro:`While cloud computing offers many benefits, it also comes with several risks that organizations must understand and manage carefully. These risks range from data security threats to service availability issues. Proper risk management strategies and choosing the right cloud provider can help organizations minimize these risks. A thorough risk assessment should be conducted before migrating any critical workload to the cloud.`,
+  points:[
+    { t:'Data Security and Privacy', b:'Storing data on a third-party cloud provider\'s servers raises serious security concerns. Sensitive business data may be exposed to unauthorized access, data breaches, or cyberattacks. Organizations must ensure the cloud provider follows strong security practices and compliance standards. Encrypting data both at rest and in transit is a critical baseline requirement.' },
+    { t:'Downtime and Service Outages', b:'Cloud services depend on internet connectivity and the provider\'s infrastructure. If the cloud provider experiences hardware failure, natural disaster, or cyberattack, the entire service can go down. This can lead to significant business losses and productivity disruption. Even major providers like AWS and Azure have experienced notable outages in the past.' },
+    { t:'Vendor Lock-In', b:'Once an organization fully migrates to a specific cloud provider, switching to another provider becomes difficult and expensive. Proprietary APIs, data formats, and tools can make it hard to move to a competitor, leaving the organization dependent on one vendor\'s pricing and policies. Using open standards and avoiding proprietary managed services reduces this risk.' },
+    { t:'Loss of Control', b:'When data and applications are hosted on the cloud, organizations give up some control over where their data is stored, how it is managed, and who can access it. This can create compliance issues, especially in regulated industries like banking, healthcare, and government. Organizations must carefully review cloud contracts and service level agreements.' },
+    { t:'Compliance and Legal Issues', b:'Different countries have different laws about data storage and privacy (like GDPR in Europe). Storing data in a cloud provider\'s data center located in another country may violate local data privacy laws and create legal and regulatory compliance challenges for the organization. Organizations must select cloud regions that comply with applicable data residency requirements.' },
+    { t:'Internet Dependency', b:'Cloud computing requires a reliable, high-speed internet connection. If the internet goes down or becomes slow, users cannot access cloud applications, data, or services. Organizations in areas with poor internet infrastructure may find cloud computing unreliable. Redundant internet connections and hybrid cloud strategies can mitigate this dependency.' }
+  ]
+},
+
+// Ch5 CHAPTER
+{ type:'chapter', roman:'V', num:'Chapter 05', title:'Cloud Applications\n& Services', desc:'Virtualized Cloud Model · SOA · Cloud App Advantages · Cloud Economics' },
+
+// Ch5 Q1
+{ type:'question', chap:'Chapter 5', q:'Q1. Explain the Virtualized Cloud Model.',
+  intro:`The virtualized cloud model is the architectural foundation of cloud computing. In this model, physical hardware resources are abstracted into virtual resources using virtualization technology. Cloud providers build this model in layers, where physical infrastructure is converted into virtual pools of resources that can be delivered to customers over the internet as on-demand services. This layered model enables the elasticity, scalability, and cost efficiency that defines modern cloud computing.`,
+  points:[
+    { t:'Physical Infrastructure Layer', b:'At the bottom layer is the actual physical hardware — servers, storage arrays, network switches, and data centers. This is what cloud providers own and maintain. Customers never directly interact with or see this physical layer. Providers invest billions of dollars in building and securing these data centers across the world.' },
+    { t:'Virtualization Layer', b:'The hypervisor software sits above the physical hardware and creates virtual machines from the physical resources. Multiple VMs share the same physical server. This layer enables resource pooling, isolation, and dynamic allocation of computing resources. Without this layer, cloud computing as we know it would not be possible.' },
+    { t:'Virtual Resource Pool', b:'The virtualized resources are combined into large resource pools — pools of virtual CPU, memory, storage, and network. These pools can be dynamically divided and allocated to customers based on their requests, giving the illusion of unlimited resources. Automated orchestration software manages these pools and ensures resources are always available on demand.' },
+    { t:'Service Delivery Layer', b:'Above the virtual pool, cloud providers create service layers — IaaS, PaaS, or SaaS. Customers interact with these layers through APIs, web portals, or applications. They request and consume virtual resources without knowing the physical details. This abstraction is what makes cloud computing easy to use for non-technical users.' },
+    { t:'Management and Automation', b:'Cloud management platforms handle automated provisioning, monitoring, billing, and scaling. When a customer requests a new virtual machine, the system automatically creates it from the resource pool within seconds, without any manual intervention. Automation is what allows a single cloud provider to serve millions of customers simultaneously.' },
+    { t:'Benefits of the Virtualized Cloud Model', b:'This model enables massive scalability, cost efficiency, and flexibility. Providers serve thousands of customers from the same hardware. Customers only pay for what they use. Resources can be scaled up or down instantly based on real-time demand. The model also improves hardware utilization rates from under 15% to over 70% compared to traditional IT.' }
+  ]
+},
+
+// Ch5 Q2
+{ type:'question', chap:'Chapter 5', q:'Q2. Write a short note on Service-Oriented Architecture (SOA).',
+  intro:`Service-Oriented Architecture (SOA) is a software design approach where business functions are broken down into independent, reusable services. Each service performs a specific task and communicates with other services over a network using standard protocols. SOA is closely related to cloud computing as it forms the architectural basis for how cloud services are built and delivered. SOA principles have evolved into modern microservices architecture used in cloud-native application development.`,
+  points:[
+    { t:'What is SOA?', b:'SOA is an architectural style where software is structured as a collection of loosely coupled, independent services. Each service provides a specific business function and can be accessed over a network regardless of the programming language or platform it was built on. Services communicate using standard protocols like SOAP, REST, or messaging queues.' },
+    { t:'Key Principle – Loose Coupling', b:'In SOA, services are loosely coupled — they are independent of each other. A change in one service does not break other services. This makes the system flexible, maintainable, and easier to update over time without disrupting other parts of the system. Loose coupling is also a core principle of modern microservices and cloud-native architecture.' },
+    { t:'Service Reusability', b:'Services in SOA are designed to be reused across multiple applications. For example, a user authentication service can be used by many different applications instead of writing authentication code separately for each one, saving development time and cost. This reusability is one of the key economic benefits of adopting SOA.' },
+    { t:'SOA Components', b:'SOA has three main roles: Service Provider (creates and offers services), Service Consumer (uses services), and Service Registry (a directory where services are listed and discovered). These roles work together to enable seamless service communication. The Service Registry acts like a phone book, allowing consumers to find and connect to available services.' },
+    { t:'SOA and Cloud Computing', b:'SOA forms the foundation for cloud service delivery. Cloud services like IaaS, PaaS, and SaaS are built on SOA principles — each cloud service is an independent, accessible unit that can be combined with other services to build complete solutions. AWS alone offers over 200 independent cloud services that can be combined using SOA principles.' },
+    { t:'Advantages of SOA', b:'SOA improves flexibility, reduces development costs through reusability, makes systems easier to maintain and update, supports platform independence, and enables organizations to integrate new services without rebuilding existing applications from scratch. SOA also simplifies integration between organizations by using standard communication protocols.' }
+  ]
+},
+
+// Ch5 Q3
+{ type:'question', chap:'Chapter 5', q:'Q3. Explain the advantages of Cloud Applications.',
+  intro:`Cloud applications are software programs that run on cloud infrastructure rather than on local computers. Unlike traditional desktop software, cloud applications are accessed through a web browser or mobile app, and all data is stored in the cloud. They offer numerous advantages over traditional on-premise software in terms of cost, accessibility, and maintenance. Cloud applications have become the dominant model for delivering business software in the modern era.`,
+  points:[
+    { t:'Accessibility from Anywhere', b:'Cloud applications can be accessed from any device with an internet connection — laptop, smartphone, or tablet. Users are not tied to a specific office computer. Remote employees can access all applications and data just as if they were sitting in the office. This has been a critical enabler of remote work and the shift to distributed teams.' },
+    { t:'No Installation Required', b:'Cloud applications run in the web browser, so there is nothing to install or configure on the user\'s device. This saves IT teams a huge amount of time and eliminates compatibility issues that arise from running software on different hardware or OS versions. Organizations can deploy new software to thousands of users instantly without any local installation.' },
+    { t:'Automatic Updates', b:'The cloud provider handles all updates, bug fixes, and security patches automatically. Users always have access to the latest version of the application without doing anything. This eliminates the hassle of manual software updates and ensures consistent security. Organizations are protected from known vulnerabilities as soon as patches are released.' },
+    { t:'Cost Efficiency', b:'Cloud applications follow a subscription (SaaS) model — users pay a monthly or yearly fee instead of buying expensive software licenses. Small businesses can use enterprise-grade applications without a large upfront investment in software or hardware. The subscription model also converts software costs from capital expenses to predictable operational expenses.' },
+    { t:'Easy Collaboration', b:'Multiple users can work on the same document or application simultaneously in real-time from different locations. Applications like Google Docs or Microsoft 365 allow teams to collaborate instantly, improving productivity and reducing miscommunication. Real-time collaboration eliminates the confusion of emailing files back and forth with version conflicts.' },
+    { t:'Scalability and Reliability', b:'Cloud applications automatically scale to handle increased users or data loads. Cloud providers guarantee high availability through redundant infrastructure. If one server fails, another takes over automatically, ensuring the application remains always available to users. Most enterprise cloud applications offer 99.9% or higher uptime guarantees in their SLAs.' }
+  ]
+},
+
+// Ch5 Q4
+{ type:'question', chap:'Chapter 5', q:'Q4. Write a short note on Cloud Economics.',
+  intro:`Cloud economics refers to the study of the financial benefits, costs, and economic principles behind adopting cloud computing. It helps organizations understand whether moving to the cloud is cost-effective compared to maintaining their own on-premise IT infrastructure. The core idea is that cloud computing changes IT spending from large capital expenses to flexible operational expenses. A proper understanding of cloud economics is essential before making any cloud migration decision.`,
+  points:[
+    { t:'Pay-As-You-Go Model', b:'In cloud computing, organizations pay only for the resources they actually use — similar to paying for electricity. There is no need to buy expensive servers upfront. Costs scale up when demand increases and scale down when demand decreases, keeping IT expenses flexible. This model is especially beneficial for startups and organizations with unpredictable workloads.' },
+    { t:'Reduction in Capital Expenditure', b:'Traditional IT required large upfront investments in servers, storage, networking equipment, and data center space. Cloud computing eliminates most of these capital costs. Organizations convert fixed infrastructure costs into variable operational expenses. This frees up capital that can be reinvested into core business activities.' },
+    { t:'Economies of Scale', b:'Cloud providers serve millions of customers, allowing them to buy hardware in massive quantities at low prices. These savings are passed on to customers in the form of lower cloud prices. Individual organizations could never achieve such low costs on their own. Providers like AWS continuously lower prices as their infrastructure scale grows.' },
+    { t:'Cost Savings on Maintenance', b:'Cloud providers handle all hardware maintenance, software updates, security patches, and data center operations. Organizations save on IT staff, electricity, cooling, and facility costs that would be needed to maintain an on-premises data center. IDC studies show organizations can reduce IT maintenance costs by over 60% after moving to cloud.' },
+    { t:'Scalability and Agility', b:'Cloud computing allows businesses to quickly scale IT resources up during peak periods and scale down during quiet periods without wasting money on idle hardware. This agility helps businesses respond faster to market changes and new opportunities. Organizations can launch new services globally in hours instead of months.' },
+    { t:'Total Cost of Ownership (TCO)', b:'When evaluating cloud economics, organizations calculate the Total Cost of Ownership — comparing the full cost of on-premise IT (hardware, staff, energy, space, maintenance) against the subscription cost of cloud services. Most organizations find cloud computing more economical over time when all hidden costs of on-premise IT are properly accounted for.' }
+  ]
+},
+
+// Ch6 CHAPTER
+{ type:'chapter', roman:'VI', num:'Chapter 06', title:'Selecting Cloud\nPlatform', desc:'Factors for Cloud Platform Selection · Economic Cloud Deployment' },
+
+// Ch6 Q1
+{ type:'question', chap:'Chapter 6', q:'Q1. State the factors to be considered while selecting a Cloud Platform.',
+  intro:`Selecting the right cloud platform is one of the most important decisions for any organization. A wrong choice can lead to high costs, security issues, and technical problems. Organizations must evaluate multiple factors before committing to a cloud provider, as migrating from one platform to another later can be very expensive and disruptive. A structured evaluation process comparing multiple providers against defined criteria is the best approach.`,
+  points:[
+    { t:'Security and Compliance', b:'The cloud provider must offer strong security features like data encryption, identity management, and intrusion detection. For industries like banking or healthcare, the provider must also meet regulatory compliance standards (GDPR, HIPAA, ISO 27001) applicable to the organization. Organizations should review the provider\'s third-party security audit certifications before committing.' },
+    { t:'Cost and Pricing Model', b:'Organizations must compare the pricing models of different cloud providers — pay-as-you-go, reserved instances, or subscription plans. They must calculate the total cost including data transfer fees, storage costs, and support charges to avoid unexpected billing surprises. Cost optimization tools provided by the cloud vendor should also be evaluated.' },
+    { t:'Scalability and Performance', b:'The chosen platform must be able to scale resources up or down quickly to meet changing business demands. It should offer high availability, low latency, and consistent performance across different geographic regions where the organization operates. Performance benchmarks and SLA guarantees should be reviewed for the specific workloads being migrated.' },
+    { t:'Service Offerings and Features', b:'Different providers offer different services — some may have better AI and machine learning tools, others may have better databases or networking features. Organizations should match their technical requirements with the provider\'s service catalog before making a decision. The breadth and depth of managed services can significantly impact development productivity.' },
+    { t:'Support and SLA', b:'The cloud provider\'s Service Level Agreement (SLA) guarantees uptime and defines what compensation is provided if the service goes down. Organizations must evaluate the quality, availability, and responsiveness of the provider\'s technical support team. Premium support tiers with dedicated technical account managers should be considered for mission-critical workloads.' },
+    { t:'Vendor Lock-In Risk', b:'Organizations should consider how easily they can move to another provider if needed. Using standard, open technologies rather than proprietary cloud tools reduces lock-in risk. A multi-cloud or hybrid strategy should be evaluated to maintain flexibility and negotiating power. Containerization with Kubernetes is one way to reduce lock-in by making workloads portable.' }
+  ]
+},
+
+// Ch6 Q2
+{ type:'question', chap:'Chapter 6', q:'Q2. How to select an Economic Cloud Deployment Model?',
+  intro:`Selecting an economically sound cloud deployment model requires analyzing the organization's budget, security needs, and workload characteristics. The goal is to find the model that provides the best value for money while meeting technical and business requirements. Different deployment models have different cost structures and management overhead. A financial analysis combined with a technical assessment is necessary to make the best decision.`,
+  points:[
+    { t:'Analyze Workload Type', b:'First, classify workloads as sensitive (requiring high security), variable (unpredictable usage), or stable (consistent usage). Sensitive workloads are better suited for private cloud. Variable workloads save money on public cloud. Stable workloads may benefit from reserved pricing. This classification directly determines the most economical deployment option.' },
+    { t:'Compare Total Cost of Ownership', b:'Calculate the full cost of each deployment model — public cloud subscription vs. private cloud infrastructure investment. Include hidden costs like staff training, migration expenses, ongoing management, and data egress fees to get an accurate financial comparison. Many organizations underestimate egress costs when moving large amounts of data out of the cloud.' },
+    { t:'Consider Public Cloud for Cost Savings', b:'Public cloud is the most economical option for most small and medium businesses. There is no upfront hardware investment and costs scale with usage. It is ideal for startups, variable workloads, development and testing environments, and applications needing global reach. Reserved instance pricing can further reduce costs by up to 70% for predictable workloads.' },
+    { t:'Private Cloud for Specific Needs', b:'Private cloud has higher upfront costs but may be more economical long-term for large organizations with consistent, high-volume workloads. When regulatory compliance requires data to be stored on-premises, private cloud may be the only viable option despite higher costs. The break-even point compared to public cloud is typically 3-5 years.' },
+    { t:'Hybrid Cloud for Flexibility', b:'Hybrid cloud offers the best economic balance for many enterprises. Keep sensitive, stable workloads on private cloud and move variable, less sensitive workloads to public cloud. This minimizes private cloud costs while taking advantage of public cloud\'s elasticity. Hybrid cloud allows organizations to optimize spending for each workload individually.' },
+    { t:'Evaluate ROI and Business Goals', b:'The final decision should align with long-term business goals. Organizations must calculate Return on Investment (ROI) by comparing cost savings, productivity improvements, and new business capabilities gained from cloud adoption against the total investment in migration and subscription fees. Cloud migrations typically achieve positive ROI within 2-3 years for most organizations.' }
+  ]
+},
+
+// QB CHAPTER
+{ type:'chapter', roman:'QB', num:'Question Bank', title:'Additional\nQuestion Bank', desc:'Linux Administration · Storage · Cloud Infrastructure · Advanced Topics' },
+
+// QB Q1
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB1. Write a procedure to create a new user and adding it to a group.',
+  intro:`In Linux, every resource (file, process, device) has an owner. Users and groups are the mechanism Linux uses to control who can access what. Proper user and group management is essential for system security. Linux has a root user (superuser with full access) and regular users with limited permissions based on their group memberships. Correctly assigning users to groups is a fundamental system administration task.`,
+  steps:[
+    { n:'Step 1', b:'Create a new user with the command: <span class="code-inline">sudo useradd username</span>. This creates the user account with default settings. To set a home directory, use: <span class="code-inline">sudo useradd -m username</span>. The <span class="code-inline">-m</span> flag ensures the user\'s home directory is created automatically under <span class="code-inline">/home/</span>.' },
+    { n:'Step 2', b:'Set a password for the new user using: <span class="code-inline">sudo passwd username</span>. The system will prompt you to enter and confirm the password. A password is required for the user to log in. Use a strong password following your organization\'s password policy to ensure security.' },
+    { n:'Step 3', b:'Create a new group using: <span class="code-inline">sudo groupadd groupname</span>. If the group already exists, skip this step. You can verify existing groups by checking the <span class="code-inline">/etc/group</span> file using <span class="code-inline">cat /etc/group</span> or searching with <span class="code-inline">grep groupname /etc/group</span>.' },
+    { n:'Step 4', b:'Add the user to the group using: <span class="code-inline">sudo usermod -aG groupname username</span>. The <span class="code-inline">-aG</span> flag appends the user to the group without removing them from other groups. Omitting the <span class="code-inline">-a</span> flag would replace all existing group memberships, so always use <span class="code-inline">-aG</span> together.' },
+    { n:'Step 5', b:'Verify the user was added correctly using: <span class="code-inline">groups username</span> or <span class="code-inline">id username</span>. This displays all groups the user belongs to. The user may need to log out and log back in for the new group membership to take effect in their current session.' },
+    { n:'Step 6', b:'To set a specific home directory and shell, use: <span class="code-inline">sudo useradd -m -d /home/username -s /bin/bash username</span>. This gives the user a proper home folder and default shell for login. Specifying the shell explicitly ensures the user gets a proper interactive login environment.' }
+  ]
+},
+
+// QB Q2
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB2. What is YUM?',
+  intro:`YUM stands for Yellowdog Updater Modified. It is a package management tool used in Red Hat-based Linux distributions like CentOS, Fedora, and RHEL. YUM automatically handles software installation, updates, and removal along with all their dependencies, making software management much simpler than manual compilation. YUM has been largely succeeded by DNF in newer distributions, but it remains widely used on many production Linux systems.`,
+  points:[
+    { t:'What is YUM?', b:'YUM is a command-line package manager for RPM-based Linux distributions. It downloads and installs software packages from online repositories. It automatically resolves dependencies — if software A needs software B to work, YUM installs both automatically. This eliminates the manual dependency resolution that made early Linux software installation difficult.' },
+    { t:'Installing Software', b:'To install a package, use: <span class="code-inline">yum install package-name</span>. YUM downloads the package from a configured repository and installs it along with all required dependencies without any manual intervention. YUM also verifies package integrity using GPG signatures before installation.' },
+    { t:'Removing Software', b:'To remove a package, use: <span class="code-inline">yum remove package-name</span>. YUM uninstalls the software and can also remove packages that were installed as dependencies and are no longer needed by any other package. Use <span class="code-inline">yum autoremove</span> to automatically clean up unused dependency packages.' },
+    { t:'Updating Software', b:'To update a specific package, use: <span class="code-inline">yum update package-name</span>. To update all installed packages to their latest versions, use: <span class="code-inline">yum update</span>. This keeps the system secure and up-to-date. Security updates should be applied regularly to protect against known vulnerabilities.' },
+    { t:'YUM Repositories', b:'YUM downloads packages from repositories — online servers that host RPM packages. Repositories are configured in files under <span class="code-inline">/etc/yum.repos.d/</span>. You can add third-party repositories to install software not available in the default repos. EPEL (Extra Packages for Enterprise Linux) is a popular additional repository.' },
+    { t:'YUM vs DNF', b:'In newer versions of Fedora and RHEL 8+, YUM has been replaced by DNF (Dandified YUM). DNF is faster and uses less memory than YUM. However, the syntax is almost identical, and many YUM commands still work in DNF through backward compatibility. DNF also provides a more robust dependency solver than YUM.' }
+  ]
+},
+
+// QB Q3
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB3. Write a short note on Network File System (NFS).',
+  intro:`NFS stands for Network File System. It is a distributed file system protocol developed by Sun Microsystems in 1984. NFS allows a computer (client) to access files stored on another computer (server) over a network as if those files were stored locally on the client's own hard drive. It is widely used in Linux and Unix environments for file sharing. NFS simplifies storage management by centralizing files on one server that multiple clients can access simultaneously.`,
+  points:[
+    { t:'What is NFS?', b:'NFS is a client-server protocol that enables file sharing over a network. The NFS server exports (shares) a directory, and NFS clients mount that directory over the network. To the user on the client machine, the remote files look exactly like local files. Applications do not need any modification to work with NFS-mounted directories.' },
+    { t:'How NFS Works', b:'The NFS server exports directories by listing them in <span class="code-inline">/etc/exports</span>. Clients use the <span class="code-inline">mount</span> command to connect to the exported directory. All read/write operations are transparently sent over the network using RPC (Remote Procedure Calls). Permanent NFS mounts can be configured in <span class="code-inline">/etc/fstab</span> to survive reboots.' },
+    { t:'Versions of NFS', b:'NFS has evolved through several versions. NFSv3 is stateless and widely supported. NFSv4 (current standard) adds better security through Kerberos authentication, works better through firewalls since it uses a single port, and improves performance for large file operations. NFSv4.1 introduced parallel NFS (pNFS) for even higher performance.' },
+    { t:'Use Cases', b:'NFS is used in organizations to share home directories across multiple servers, provide shared storage for applications, enable Linux/Unix desktops to access central file servers, and serve VM disk images in virtualization environments like VMware. High Performance Computing (HPC) clusters commonly use NFS for shared storage access.' },
+    { t:'Advantages of NFS', b:'NFS is easy to set up in Linux environments, allows multiple users to share files from one central location, reduces storage redundancy by having one copy of files instead of many, and is available by default on most Linux distributions without additional software. It significantly simplifies backup management by centralizing all files.' },
+    { t:'Limitations', b:'NFS performance can be affected by network speed and latency. It is less suitable for high-performance applications like databases (iSCSI or SAN is better for that). Security in older NFS versions was weak, but NFSv4 with Kerberos provides much stronger authentication. NFS is also not ideal for applications requiring file locking across multiple clients.' }
+  ]
+},
+
+// QB Q4
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB4. How to configure Cache NameServer.',
+  intro:`A Caching Name Server (also called a Caching DNS Server) is a DNS server that stores (caches) the results of DNS queries it has previously answered. When the same hostname is looked up again, the server responds from its cache instead of querying the internet again. This speeds up DNS resolution and reduces network traffic. Caching DNS servers are used in organizations to improve name resolution speed for all internal users.`,
+  steps:[
+    { n:'Step 1', b:'Install the BIND package using: <span class="code-inline">sudo yum install bind bind-utils</span> (RHEL/CentOS) or <span class="code-inline">sudo apt install bind9</span> (Ubuntu/Debian). BIND is the most popular DNS software on Linux. The bind-utils package provides tools like <span class="code-inline">dig</span> and <span class="code-inline">nslookup</span> for testing DNS resolution.' },
+    { n:'Step 2', b:'Open the main BIND configuration file: <span class="code-inline">/etc/named.conf</span> (or <span class="code-inline">/etc/bind/named.conf</span> on Ubuntu). This file controls how the DNS server behaves. Create a backup of the original file before making any changes: <span class="code-inline">cp /etc/named.conf /etc/named.conf.bak</span>.' },
+    { n:'Step 3', b:'Configure the <span class="code-inline">listen-on</span> directive to specify the IP address and port where the DNS server listens. For a local cache server, set it to listen on <span class="code-inline">127.0.0.1</span> and the server\'s own IP. Set <span class="code-inline">recursion yes;</span> to allow the server to perform full DNS lookups on behalf of clients.' },
+    { n:'Step 4', b:'Set the <span class="code-inline">allow-query</span> option to define which clients can use this DNS server. For a local network cache server, allow the local subnet (e.g., <span class="code-inline">allow-query { localhost; 192.168.1.0/24; };</span>). Restricting queries to known IP ranges prevents your DNS server from being abused by external users.' },
+    { n:'Step 5', b:'Configure forwarders — upstream DNS servers to forward queries to when the cache doesn\'t have the answer. Example: <span class="code-inline">forwarders { 8.8.8.8; 8.8.4.4; };</span> uses Google\'s DNS servers as forwarders. You can also use your ISP\'s DNS servers as forwarders for potentially faster resolution within your network.' },
+    { n:'Step 6', b:'Start and enable BIND: <span class="code-inline">sudo systemctl start named</span> and <span class="code-inline">sudo systemctl enable named</span>. Test by running <span class="code-inline">dig @localhost google.com</span> to verify the cache server is working. Check response time on repeated queries to confirm caching is functioning correctly.' }
+  ]
+},
+
+// QB Q5
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB5. Write a short note on iSCSI.',
+  intro:`iSCSI stands for Internet Small Computer System Interface. It is a storage protocol that allows SCSI (disk) commands to be sent over standard TCP/IP networks. This means storage devices like disk arrays can be accessed over regular Ethernet networks, making them appear as locally attached drives to the server. iSCSI is widely used for SAN (Storage Area Network) deployments, particularly in small and medium enterprises that cannot afford dedicated Fibre Channel infrastructure.`,
+  points:[
+    { t:'What is iSCSI?', b:'iSCSI is a block-level storage protocol that encapsulates SCSI commands in TCP/IP packets. This allows servers to access remote storage over Ethernet as if it were a directly attached local disk. It was developed by IBM and Cisco and became an IETF standard in 2003. Today it is the dominant protocol for IP-based SANs.' },
+    { t:'Initiator and Target', b:'iSCSI uses a client-server model. The iSCSI Initiator is the client (server that wants storage). The iSCSI Target is the storage device (disk array or NAS). The initiator sends SCSI read/write commands to the target over the TCP/IP network. Each initiator and target is identified by a unique IQN (iSCSI Qualified Name).' },
+    { t:'Block-Level Access', b:'Unlike NFS which provides file-level access, iSCSI provides block-level access. The server sees the remote storage as a raw disk which it can partition and format with any file system. This is important for applications like databases that need direct disk access. VMware uses iSCSI for VMFS datastores in smaller environments.' },
+    { t:'Advantages', b:'iSCSI is cost-effective because it uses standard Ethernet infrastructure instead of expensive Fibre Channel hardware. It provides high performance for database and virtualization workloads, is easy to configure, and supports long-distance connectivity over IP networks. 10GbE and 25GbE networks provide enough bandwidth for most enterprise iSCSI workloads.' },
+    { t:'Security', b:'iSCSI uses CHAP (Challenge Handshake Authentication Protocol) to authenticate initiators before granting storage access. For additional security, IPsec can be used to encrypt iSCSI traffic over the network, protecting against unauthorized access and eavesdropping. Dedicated VLANs for iSCSI traffic are also strongly recommended as a security best practice.' },
+    { t:'iSCSI vs Fibre Channel', b:'Fibre Channel (FC) SAN offers lower latency and higher throughput than iSCSI but requires dedicated, expensive FC hardware and infrastructure. iSCSI runs on standard Ethernet, making it more affordable and suitable for small and medium businesses needing SAN storage. Modern 25GbE iSCSI setups can approach FC performance at a fraction of the cost.' }
+  ]
+},
+
+// QB Q6
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB6. Explain Network-Attached Storage (NAS).',
+  intro:`Network-Attached Storage (NAS) is a dedicated file storage device that connects to a network and provides data access to multiple clients simultaneously. Unlike a SAN which provides block-level storage, NAS works at the file level and is managed as a separate device on the network. It is simple to set up and widely used in homes, small businesses, and enterprises for centralized file storage. NAS devices have become increasingly powerful, with modern units supporting features like deduplication, snapshots, and cloud synchronization.`,
+  points:[
+    { t:'What is NAS?', b:'NAS is a standalone storage device that connects directly to a network (like a switch or router). It has its own OS, processor, and storage drives. Multiple computers on the network can access files stored on the NAS simultaneously using protocols like NFS (Linux) or SMB/CIFS (Windows). Popular NAS platforms include Synology, QNAP, and NetApp.' },
+    { t:'File-Level Access', b:'NAS provides file-level storage — users access specific files and folders, not raw disk blocks. The NAS device manages its own file system. This is simpler than SAN but less suitable for performance-critical applications like large databases. File-level access makes NAS easy to use with any operating system without special client software.' },
+    { t:'Protocols Used', b:'NAS uses standard file sharing protocols. NFS (Network File System) is used for Linux and Unix clients. SMB/CIFS (Server Message Block) is used for Windows clients. Some modern NAS devices support both protocols simultaneously for mixed environments. AFP was previously used for macOS clients but has largely been replaced by SMB.' },
+    { t:'Use Cases', b:'NAS is used for centralized file storage and sharing, backup storage, media streaming (photos, videos), home directory storage for users, and as shared storage for small virtualization environments. Many small businesses use NAS as an affordable alternative to expensive enterprise SAN infrastructure.' },
+    { t:'Advantages', b:'NAS is easy to set up and manage without specialized storage knowledge. It provides centralized storage accessible from many devices. It scales easily by adding more drives. It is cost-effective compared to SAN and supports multiple protocols simultaneously. Modern NAS devices also include built-in backup, cloud sync, and disaster recovery features.' },
+    { t:'NAS vs SAN', b:'NAS provides file-level access over standard Ethernet and is simpler and cheaper. SAN provides block-level access over dedicated high-speed networks (Fibre Channel or iSCSI) and offers much higher performance. SAN is for high-performance databases; NAS is for general file sharing. Many organizations use both NAS and SAN for different storage needs.' }
+  ]
+},
+
+// QB Q7
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB7. Explain the five Things to Consider for Cloud Backup and Disaster Recovery.',
+  intro:`Cloud backup and disaster recovery (DR) ensures that an organization's data and systems can be restored quickly after a disaster, failure, or cyberattack. Moving backup and DR to the cloud offers many advantages over traditional tape or on-site backup, including faster recovery, lower cost, and geographic redundancy. However, careful planning is required to ensure backup strategies meet business continuity requirements and regulatory obligations.`,
+  points:[
+    { t:'1. Recovery Time Objective (RTO)', b:'RTO defines how quickly systems must be restored after a failure. Organizations must choose a cloud DR solution that meets their RTO requirements. Critical business systems may need to be restored in minutes, while less critical systems may tolerate hours of downtime. Modern cloud DR solutions like AWS Elastic Disaster Recovery can achieve RTO of minutes.' },
+    { t:'2. Recovery Point Objective (RPO)', b:'RPO defines how much data loss is acceptable — measured as time. If the RPO is 1 hour, the organization can tolerate losing up to 1 hour of data. Cloud backup frequency (every hour, every 15 minutes) must be configured to match the RPO requirements. Continuous data protection solutions can reduce RPO to near zero for critical systems.' },
+    { t:'3. Data Security and Encryption', b:'All backup data stored in the cloud must be encrypted both during transfer (in transit) and while stored (at rest). Organizations must verify that the cloud provider uses strong encryption (AES-256) and has access controls to prevent unauthorized access to backup data. Backup encryption keys should be managed separately from the cloud provider for maximum security.' },
+    { t:'4. Cost of Storage and Recovery', b:'Cloud backup costs depend on storage used, data transfer fees, and retrieval charges. Organizations must calculate the total cost including egress fees when restoring large amounts of data. Some providers charge significantly more for data retrieval than for storage. Storage tiering (hot, warm, cold) can reduce costs by storing older backups in cheaper storage tiers.' },
+    { t:'5. Testing and Verification', b:'A backup is useless if it cannot be restored. Organizations must regularly test their disaster recovery plan by actually running restore operations. Cloud DR solutions should be tested at least quarterly to ensure backups are valid and recovery procedures work correctly. Test results should be documented and any issues resolved before the next test cycle.' },
+    { t:'Geographic Redundancy', b:'For true disaster recovery, backups should be stored in a different geographic region from the primary systems. Cloud providers offer multiple data center regions globally. Storing backups in a different region protects against regional disasters like floods or power failures. A 3-2-1 backup strategy (3 copies, 2 media types, 1 offsite) is the recommended baseline.' }
+  ]
+},
+
+// QB Q8
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB8. Write a short note on Grid Computing.',
+  intro:`Grid computing is a distributed computing model that connects multiple computers (often from different locations and organizations) to work together as one large virtual computer. It allows geographically dispersed resources to be used collectively to solve complex, large-scale computational problems. Grid computing was a predecessor to modern cloud computing and laid the conceptual groundwork for distributed resource sharing at scale.`,
+  points:[
+    { t:'What is Grid Computing?', b:'Grid computing links together hundreds or thousands of computers across different locations, organizations, or even countries into a unified computing grid. Each computer contributes its idle processing power to solve large computational tasks that would be too big for any single computer. This approach democratizes access to supercomputing-level resources.' },
+    { t:'How It Works', b:'A large computation task is divided into smaller subtasks by middleware software. These subtasks are distributed to computers in the grid, which process them independently. Results are then collected and combined to form the final output. The BOINC framework (used in SETI@home) is a famous example of volunteer grid computing.' },
+    { t:'Types of Grid', b:'There are two main types: Computational Grids (for processing-intensive tasks like scientific simulations) and Data Grids (for storing and accessing large datasets distributed across multiple locations). Both types use middleware to coordinate and manage distributed resources. The Open Grid Services Architecture (OGSA) is a common standard framework.' },
+    { t:'Characteristics', b:'Grid computing is heterogeneous (different types of computers), geographically distributed, uses shared resources across organizational boundaries, and is used for large-scale parallel processing of scientific and research workloads that require massive computing power. Resource scheduling in grids must handle varying availability and reliability of participating machines.' },
+    { t:'Applications', b:'Grid computing is used in scientific research (particle physics at CERN, climate modeling, drug discovery), financial analysis, weather forecasting, and bioinformatics. SETI@home used grid computing to analyze radio telescope data for signs of extraterrestrial intelligence. The LHC computing grid at CERN processes petabytes of particle collision data using thousands of computers worldwide.' },
+    { t:'Grid vs Cloud Computing', b:'Grid computing connects heterogeneous computers from different organizations for specific large tasks, typically without billing. Cloud computing provides on-demand, standardized virtualized resources with pay-as-you-go pricing from a single provider\'s data center infrastructure. Cloud is more commercial and user-friendly; grid is more suited for research and scientific collaboration.' }
+  ]
+},
+
+// QB Q9
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB9. Write a short note on Utility Computing.',
+  intro:`Utility computing is a computing model where computing resources like processing power, storage, and network bandwidth are provided as a metered service — similar to how electricity or water is provided. Users pay only for the computing resources they actually consume, just like a utility bill. This concept is the direct predecessor of modern cloud computing and the foundational economic model behind AWS, Azure, and Google Cloud's pricing structure.`,
+  points:[
+    { t:'What is Utility Computing?', b:'Utility computing treats computing resources as a commodity service. Instead of buying and maintaining servers, organizations subscribe to computing services and pay based on their usage. The provider owns and manages the infrastructure; the customer just consumes and pays for it. This shifts IT from a capital investment to an operational expense.' },
+    { t:'Pay-Per-Use Model', b:'The defining feature of utility computing is pay-per-use pricing. Organizations are billed based on how much CPU time, storage, or network bandwidth they consume — exactly like paying per kilowatt-hour of electricity. This eliminates wasted spending on idle infrastructure and aligns IT costs directly with actual business activity.' },
+    { t:'Low Initial Cost', b:'Since there is no need to buy physical hardware, utility computing greatly reduces the initial investment required to start using computing resources. This makes powerful computing accessible to small businesses and startups that cannot afford expensive infrastructure. Organizations can begin with a small spend and scale up as their business grows.' },
+    { t:'Infinite Scalability', b:'Utility computing allows customers to access as much or as little computing power as needed at any time. During peak demand, they can instantly access more resources. During quiet periods, they release those resources and stop paying for them. This elastic scalability is impossible with traditional owned-hardware infrastructure.' },
+    { t:'Relationship to Cloud Computing', b:'Utility computing is the foundational concept behind cloud computing. Services like AWS EC2 (pay per hour of server use), AWS S3 (pay per GB of storage), and Azure (pay per CPU minute) are all practical implementations of the utility computing model. The cloud made utility computing accessible at global scale for any size organization.' },
+    { t:'Advantages', b:'Utility computing reduces capital expenses, eliminates hardware maintenance costs, provides on-demand scalability, aligns IT costs with actual business usage, and allows organizations to focus on their core business instead of managing IT infrastructure. It also accelerates time-to-market for new products by eliminating lengthy hardware procurement cycles.' }
+  ]
+},
+
+// QB Q10
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB10. Write a short note on Cloud Infrastructure Components.',
+  intro:`Cloud infrastructure refers to the collection of hardware and software components that work together to deliver cloud computing services. Understanding these components helps in designing, deploying, and managing cloud environments effectively. Cloud infrastructure consists of both physical components (data centers, servers) and virtual components (VMs, networks, storage). A solid understanding of cloud infrastructure is essential for cloud architects, developers, and administrators.`,
+  points:[
+    { t:'Compute Resources', b:'The compute layer includes physical servers with CPUs and RAM, which are virtualized into virtual machines (VMs) or containers. Cloud users rent these virtualized compute resources (called instances in AWS, VMs in Azure) to run their applications and workloads. Modern cloud compute also includes GPU instances for AI/ML workloads and Arm-based processors for cost-efficient computing.' },
+    { t:'Storage Systems', b:'Cloud storage includes Object Storage (like AWS S3, for unstructured data like files and images), Block Storage (like AWS EBS, for databases and VMs), and File Storage (like AWS EFS, for shared file systems). Each type is optimized for different access patterns and workloads. Object storage is the most scalable form and can store virtually unlimited amounts of data.' },
+    { t:'Networking', b:'Cloud networking includes virtual networks (VPC — Virtual Private Cloud), subnets, routing tables, firewalls (security groups), load balancers, and DNS services. These allow cloud resources to communicate securely with each other and with the internet. Software-defined networking (SDN) makes cloud networks highly programmable and easy to configure through APIs.' },
+    { t:'Virtualization Layer', b:'Hypervisors (like KVM, VMware ESXi) form the virtualization layer that creates and manages virtual machines on physical servers. This layer is the core of cloud infrastructure, enabling multiple tenants to share the same physical hardware securely. Container runtimes like Docker add an additional lightweight virtualization layer for application packaging.' },
+    { t:'Management and Automation', b:'Cloud infrastructure includes management planes — web consoles, CLIs (Command Line Interfaces), and APIs that allow users to provision and manage resources. Automation tools like Terraform and Ansible enable Infrastructure as Code (IaC) for automated, repeatable deployment. GitOps workflows allow infrastructure changes to be version-controlled and reviewed like application code.' },
+    { t:'Data Centers', b:'All cloud infrastructure is hosted in physical data centers owned by cloud providers. These data centers have redundant power supplies, cooling systems, high-speed internet connections, and physical security. Cloud providers operate multiple data centers in different geographic regions for redundancy. Major providers maintain dozens of regions and hundreds of availability zones worldwide.' }
+  ]
+},
+
+// QB Q11
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB11. Explain the technologies working behind cloud computing platforms.',
+  intro:`Cloud computing relies on several underlying technologies that work together to make it flexible, reliable, and easy to use. These technologies are layered on top of each other to create the powerful cloud services that millions of organizations use today. Understanding these technologies helps explain why cloud computing is so transformative and why it continues to evolve rapidly as new innovations emerge.`,
+  points:[
+    { t:'Virtualization', b:'Virtualization is the most fundamental technology behind cloud computing. Hypervisors create multiple virtual machines from one physical server. This enables resource pooling, multi-tenancy, and the ability to provision new servers in seconds — all core features of cloud computing. Hardware-assisted virtualization (Intel VT-x, AMD-V) has made modern virtualization nearly as fast as running on bare metal.' },
+    { t:'Distributed Computing', b:'Cloud platforms distribute workloads across thousands of servers in multiple data centers. Technologies like Apache Hadoop, Kubernetes, and distributed databases ensure data and processing are spread across many nodes for scalability, fault tolerance, and high availability. Distributed consensus algorithms like Raft and Paxos are used to maintain consistency across replicated data.' },
+    { t:'Service-Oriented Architecture (SOA)', b:'Cloud services are built as independent, interoperable services that communicate through standard APIs. SOA enables cloud providers to build and update individual services (storage, compute, networking) independently without disrupting the entire platform. The evolution of SOA into microservices has made cloud platforms even more modular and resilient.' },
+    { t:'Broadband Networking', b:'High-speed internet connectivity is essential for cloud computing. Advanced networking technologies including fiber optics, SDN (Software-Defined Networking), CDNs (Content Delivery Networks), and 5G enable fast, reliable access to cloud resources from anywhere in the world. Cloud providers invest heavily in their own global fiber networks for inter-datacenter connectivity.' },
+    { t:'Automation and Orchestration', b:'Cloud platforms use automation technologies to handle provisioning, scaling, and management without human intervention. Tools like Kubernetes (for containers), Terraform (for infrastructure), and cloud-native auto-scaling ensure resources are automatically adjusted based on demand. AI-driven automation is increasingly used to predict capacity needs before demand spikes occur.' },
+    { t:'Security Technologies', b:'Cloud security is maintained through multiple technologies: encryption (TLS, AES-256), Identity and Access Management (IAM), multi-factor authentication, intrusion detection systems, DDoS protection, and compliance monitoring tools that continuously scan for vulnerabilities. Zero-trust security models are now widely adopted in cloud environments to minimize the blast radius of security breaches.' }
+  ]
+},
+
+// QB Q12
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB12. Explain in detail Cloud Computing Strategy Planning Phase.',
+  intro:`The Cloud Computing Strategy Planning Phase is the first and most critical step before an organization migrates to the cloud. This phase involves analyzing the current IT environment, defining business objectives, assessing risks, and creating a detailed roadmap for cloud adoption. A well-planned strategy prevents costly mistakes and ensures a smooth cloud migration. Organizations that skip this phase often face cost overruns, security gaps, and failed migrations.`,
+  points:[
+    { t:'Business Objective Assessment', b:'The planning phase starts by defining clear business goals for cloud adoption. Organizations must answer why they want to move to cloud — is it to reduce costs, improve scalability, enable remote work, or accelerate application development? Goals guide all subsequent decisions. Without clear objectives, cloud migrations often lack direction and fail to deliver measurable value.' },
+    { t:'Current Infrastructure Analysis', b:'Organizations must document their existing IT infrastructure — servers, applications, databases, networking, and storage. This inventory identifies which workloads are ready for cloud migration (cloud-native), which need modification, and which should remain on-premises (too complex or regulated). This analysis is called application portfolio assessment or workload discovery.' },
+    { t:'Cloud Readiness Assessment', b:'A cloud readiness assessment evaluates the organization\'s technical capabilities, staff skills, security posture, and compliance requirements. It identifies gaps that need to be addressed — such as staff training, application refactoring, or security policy updates — before migration begins. Skills gaps are one of the most common obstacles to successful cloud adoption.' },
+    { t:'Choosing the Right Cloud Model', b:'Based on security, cost, and workload requirements, the planning phase determines the right deployment model (public, private, hybrid) and service model (IaaS, PaaS, SaaS). The choice of cloud provider (AWS, Azure, GCP) is also made during this phase. A proof-of-concept (POC) with shortlisted providers is recommended before making a final commitment.' },
+    { t:'Risk and Compliance Planning', b:'Organizations must identify risks associated with cloud migration including data privacy laws, vendor lock-in, data loss, and service outages. A risk mitigation plan and compliance framework must be established before any workloads are moved to the cloud. Legal counsel should be involved to review cloud contracts and data processing agreements.' },
+    { t:'Migration Roadmap and Budget', b:'The final output of the planning phase is a detailed migration roadmap with priorities (which workloads to move first), timelines, resource requirements, and budget estimates. This roadmap becomes the guide for the deployment phase that follows. A phased migration approach starting with low-risk workloads is recommended to build experience and confidence before tackling critical systems.' }
+  ]
+},
+
+// QB Q13
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB13. Explain in detail Cloud Computing Deployment Phase.',
+  intro:`The Cloud Computing Deployment Phase is where the actual migration and implementation of cloud services takes place, following the strategy planning phase. This phase involves setting up the cloud environment, migrating workloads, testing, and going live. A systematic approach with proper testing at each step ensures a successful deployment. The deployment phase can take weeks to months depending on the complexity of the organization's IT environment.`,
+  points:[
+    { t:'Environment Setup', b:'The deployment phase begins with setting up the cloud environment — creating accounts, configuring Virtual Private Clouds (VPCs), setting up subnets, security groups, IAM roles, and connecting the cloud environment to on-premise systems through VPN or direct connect links. This foundation must be secure and well-architected before any workloads are migrated.' },
+    { t:'Pilot Migration', b:'Before migrating everything, organizations first migrate a small, non-critical workload as a pilot. This tests the migration process, identifies problems, and builds team confidence. The pilot also validates that the planned architecture works correctly in the real cloud environment. Lessons learned from the pilot are used to refine the migration approach for subsequent workloads.' },
+    { t:'Data Migration', b:'Data is migrated using cloud provider tools like AWS Database Migration Service or Azure Migrate. Large data migrations may require physical data transfer (shipping hard drives to the cloud provider). Data integrity is verified after migration using checksums and validation tests. Data migration is often the most complex and time-consuming part of a cloud deployment.' },
+    { t:'Application Migration', b:'Applications are migrated using strategies like Lift and Shift (moving as-is), Replatforming (minor modifications), or Refactoring (rewriting for cloud-native). Each application is tested thoroughly after migration to verify it works correctly in the cloud environment. The right strategy depends on the application\'s architecture, age, and how much cloud optimization is desired.' },
+    { t:'Testing and Validation', b:'After each migration batch, thorough testing is performed — functional testing (does it work?), performance testing (is it fast enough?), security testing (is data protected?), and disaster recovery testing (can we restore if something fails?). Issues are fixed before proceeding. Automated testing frameworks can significantly accelerate the testing phase and improve consistency.' },
+    { t:'Go-Live and Optimization', b:'Once testing is complete and all workloads are migrated, the organization goes live on cloud. Post-migration, cost optimization is done by rightsizing resources, implementing auto-scaling, and using reserved instances to reduce costs. Continuous monitoring is established for ongoing management. Cloud cost management tools like AWS Cost Explorer or Azure Cost Management help track and optimize spending.' }
+  ]
+},
+
+// QB Q14
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB14. What is an Operating System?',
+  intro:`An Operating System (OS) is the most fundamental software that manages all the hardware and software resources of a computer. It acts as an intermediary between the user and the computer hardware. Without an OS, a computer cannot function — it would just be a collection of hardware with no way to run programs or interact with users. The OS provides a stable, consistent environment in which application software can run regardless of the specific underlying hardware.`,
+  points:[
+    { t:'Definition', b:'An Operating System is system software that manages computer hardware and software resources and provides common services for computer programs. Examples include Windows 11, macOS, Linux (Ubuntu, CentOS), Android, and iOS. Every computing device needs an OS to function. Modern OSes also include security features, networking stacks, and graphical interfaces.' },
+    { t:'Process Management', b:'The OS manages all running programs (processes). It schedules which process uses the CPU and for how long, handles creating and terminating processes, and ensures processes do not interfere with each other. The process scheduler ensures fair and efficient CPU usage. Modern OSes use preemptive multitasking to run many processes seemingly simultaneously.' },
+    { t:'Memory Management', b:'The OS manages RAM allocation — deciding which parts of memory are given to which programs. It handles virtual memory (using disk space as extended RAM), prevents programs from accessing each other\'s memory, and frees memory when programs finish running. Memory protection is a critical security feature that prevents one application from crashing or corrupting another.' },
+    { t:'File System Management', b:'The OS manages files and directories on storage devices. It provides a hierarchical file system structure, controls file permissions and access rights, handles reading/writing data to disks, and supports multiple file systems like NTFS, ext4, and FAT32. The OS also handles buffering and caching of disk I/O to improve performance.' },
+    { t:'Device Management', b:'The OS communicates with hardware devices (keyboard, mouse, printer, network card) through device drivers. It provides a standard interface for programs to use hardware without needing to know the specific technical details of each device. Plug-and-play functionality in modern OSes automatically detects and configures newly connected devices.' },
+    { t:'Types of OS', b:'Operating systems are categorized as Single-user (like desktop Windows), Multi-user (Linux servers), Real-time OS (used in embedded systems and robotics), Distributed OS (manages multiple networked computers), and Mobile OS (Android, iOS for smartphones and tablets). Each type is optimized for its specific use case and performance requirements.' }
+  ]
+},
+
+// QB Q15
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB15. Explain Users & Groups Administration in Linux.',
+  intro:`In Linux, every resource (file, process, device) has an owner. Users and groups are the mechanism Linux uses to control who can access what. Proper user and group management is essential for system security. Linux has a root user (superuser with full access) and regular users with limited permissions based on their group memberships. Well-designed user and group policies are the foundation of a secure Linux system.`,
+  points:[
+    { t:'Linux Users', b:'Every Linux user has a unique username and User ID (UID). User information is stored in <span class="code-inline">/etc/passwd</span> and passwords (encrypted) in <span class="code-inline">/etc/shadow</span>. The root user (UID 0) has unrestricted access to everything on the system. System users (UID < 1000) are created by the OS for running services and should not be used for interactive logins.' },
+    { t:'Linux Groups', b:'Groups are collections of users. Every file has a group owner. Users in the same group share the same file access permissions. Group information is stored in <span class="code-inline">/etc/group</span>. Each user has a primary group and can belong to multiple secondary groups. Groups are used to grant teams access to shared directories without giving everyone individual permissions.' },
+    { t:'Creating and Managing Users', b:'<span class="code-inline">useradd username</span> creates a user. <span class="code-inline">passwd username</span> sets the password. <span class="code-inline">usermod</span> modifies user settings. <span class="code-inline">userdel username</span> deletes a user. The <span class="code-inline">-m</span> flag with useradd creates a home directory. Use <span class="code-inline">userdel -r</span> to also remove the user\'s home directory when deleting an account.' },
+    { t:'Creating and Managing Groups', b:'<span class="code-inline">groupadd groupname</span> creates a group. <span class="code-inline">groupdel groupname</span> deletes a group. <span class="code-inline">usermod -aG groupname username</span> adds a user to a group. <span class="code-inline">groups username</span> shows which groups a user belongs to. Always use the <span class="code-inline">-aG</span> flags together to append without overwriting existing memberships.' },
+    { t:'File Permissions', b:'Linux file permissions use three levels: Owner (u), Group (g), and Others (o). Each level has three permissions: Read (r=4), Write (w=2), Execute (x=1). The <span class="code-inline">chmod</span> command changes permissions and <span class="code-inline">chown</span> changes file ownership. The sticky bit and setuid/setgid permissions provide additional access control for special cases.' },
+    { t:'sudo Access', b:'The <span class="code-inline">sudo</span> command allows regular users to run commands with superuser privileges without logging in as root. Users must be added to the sudo group or listed in <span class="code-inline">/etc/sudoers</span> to use sudo. This improves security over direct root login. The <span class="code-inline">/etc/sudoers</span> file can be configured to restrict which commands each user can run with sudo.' }
+  ]
+},
+
+// QB Q16
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB16. What is Task Scheduling in Linux?',
+  intro:`Task scheduling in Linux allows administrators and users to run commands, scripts, or programs automatically at specified times or regular intervals without manual intervention. This is extremely useful for automating routine tasks like backups, log cleanups, system updates, and report generation. Linux provides two main tools for task scheduling: cron and at. Proper use of task scheduling reduces manual work and ensures critical maintenance tasks are never forgotten.`,
+  points:[
+    { t:'cron – Recurring Tasks', b:'<span class="code-inline">cron</span> is a time-based job scheduler that runs tasks at regular intervals. It reads scheduled jobs from a file called crontab (cron table). Each user and root have their own crontab. The cron daemon runs in the background and checks for scheduled jobs every minute. Any script or command that can be run manually can also be scheduled with cron.' },
+    { t:'crontab Syntax', b:'A crontab entry has 5 time fields followed by the command: <span class="code-inline">minute hour day month weekday command</span>. For example, <span class="code-inline">0 2 * * * /backup.sh</span> runs the backup script every day at 2:00 AM. <span class="code-inline">*</span> means every unit of that field. Websites like crontab.guru help visualize and validate cron expressions easily.' },
+    { t:'Managing crontab', b:'<span class="code-inline">crontab -e</span> opens the current user\'s crontab for editing. <span class="code-inline">crontab -l</span> lists all scheduled jobs. <span class="code-inline">crontab -r</span> removes all cron jobs. System-wide cron jobs are placed in <span class="code-inline">/etc/cron.d/</span> or <span class="code-inline">/etc/crontab</span>. Output from cron jobs is emailed to the user by default unless redirected to a file or /dev/null.' },
+    { t:'at – One-Time Tasks', b:'The <span class="code-inline">at</span> command schedules a task to run once at a specific future time. For example: <span class="code-inline">at 10:30 PM tomorrow</span> then type the command. Unlike cron, <span class="code-inline">at</span> is for non-recurring, one-time scheduled tasks. The <span class="code-inline">atq</span> command lists pending at jobs and <span class="code-inline">atrm</span> removes them.' },
+    { t:'systemd Timers', b:'Modern Linux systems using systemd have systemd timers as an alternative to cron. Timers are more flexible and can be monitored with <span class="code-inline">systemctl list-timers</span>. Many system maintenance tasks on modern Linux distributions use systemd timers instead of cron. Systemd timers also support monotonic schedules (e.g., run 5 minutes after boot) which cron cannot do.' },
+    { t:'Use Cases', b:'Common uses of task scheduling include automated backups, log rotation, database maintenance, sending scheduled reports, system updates (patching), cleaning temporary files, certificate renewal (like Let\'s Encrypt certificates), and scheduled application-specific tasks. Automating these tasks ensures consistency, reduces human error, and frees administrators for more strategic work.' }
+  ]
+},
+
+// QB Q17
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB17. Explain Installing & Managing Packages in Linux.',
+  intro:`In Linux, software is distributed as packages — bundles of compiled software along with installation scripts and configuration files. Package managers automate the process of downloading, installing, updating, and removing software. Different Linux distributions use different package formats and managers, but the core concept is the same across all of them. Understanding package management is a fundamental skill for any Linux administrator or developer.`,
+  points:[
+    { t:'Package Formats', b:'Linux uses two main package formats: RPM (Red Hat Package Manager) used by RHEL, CentOS, and Fedora, and DEB format used by Debian, Ubuntu, and Linux Mint. Each format has its own package manager but the concepts are identical. RPM and DEB packages contain the compiled binaries, configuration files, and metadata about the software and its dependencies.' },
+    { t:'APT (Debian/Ubuntu)', b:'APT (Advanced Package Tool) is used on Debian-based systems. Key commands: <span class="code-inline">apt install package</span> to install, <span class="code-inline">apt remove package</span> to remove, <span class="code-inline">apt update</span> to refresh package lists, <span class="code-inline">apt upgrade</span> to upgrade all packages. Always run <span class="code-inline">apt update</span> before installing new software to ensure you get the latest version.' },
+    { t:'YUM/DNF (RHEL/CentOS)', b:'YUM (and its successor DNF) is used on Red Hat-based systems. Key commands: <span class="code-inline">yum install package</span> to install, <span class="code-inline">yum remove package</span> to remove, <span class="code-inline">yum update</span> to update. DNF uses the same syntax as YUM but with improved performance and a more reliable dependency solver. RHEL 8 and later use DNF exclusively.' },
+    { t:'Package Repositories', b:'Package managers download software from online repositories — trusted servers that host package files. Repositories are configured in files under <span class="code-inline">/etc/apt/sources.list</span> (Debian) or <span class="code-inline">/etc/yum.repos.d/</span> (RHEL). Additional third-party repositories can be added for more software. Always verify the authenticity and trustworthiness of third-party repositories before adding them.' },
+    { t:'Dependency Resolution', b:'One of the main advantages of package managers is automatic dependency resolution. If software A requires library B and C, the package manager automatically downloads and installs B and C before installing A. This prevents "dependency hell" where software fails to install due to missing libraries. Modern package managers also detect and resolve conflicts between incompatible packages.' },
+    { t:'Manual Installation', b:'Software can also be installed manually using RPM (<span class="code-inline">rpm -ivh package.rpm</span>) or DPKG (<span class="code-inline">dpkg -i package.deb</span>), or compiled from source code using <span class="code-inline">./configure && make && make install</span>. Manual installation does not handle dependencies automatically. Source compilation is used when a pre-built package is not available or custom build options are needed.' }
+  ]
+},
+
+// QB Q18
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB18. Write a short note on Installing Server Components.',
+  intro:`Installing server components in Linux involves setting up various services that allow a computer to function as a server — web server, database server, DNS server, mail server, and so on. Each server component is a separate software package with its own installation and configuration process. Linux is the most popular platform for servers due to its stability, security, and free licensing. Proper installation and configuration of server components requires understanding both the software and the underlying Linux system.`,
+  points:[
+    { t:'Web Server (Apache/Nginx)', b:'A web server serves web pages to browsers. Apache is installed using <span class="code-inline">yum install httpd</span> or <span class="code-inline">apt install apache2</span>. Nginx is another popular choice known for better performance under high load. After installation, configure virtual hosts in <span class="code-inline">/etc/httpd/conf/</span> and start with <span class="code-inline">systemctl start httpd</span>.' },
+    { t:'Database Server (MySQL/MariaDB)', b:'Install MySQL or MariaDB with <span class="code-inline">yum install mariadb-server</span> or <span class="code-inline">apt install mysql-server</span>. Run <span class="code-inline">mysql_secure_installation</span> after installation to set the root password and remove insecure default settings. Configure the database to only listen on localhost unless remote access is specifically required for security.' },
+    { t:'FTP Server', b:'An FTP server allows file transfers. Install vsftpd with <span class="code-inline">yum install vsftpd</span>. Configure <span class="code-inline">/etc/vsftpd/vsftpd.conf</span> to set access permissions, anonymous access (disable for security), and passive mode settings for firewall compatibility. Consider using SFTP (SSH File Transfer Protocol) instead as it provides encryption that FTP lacks.' },
+    { t:'DNS Server (BIND)', b:'Install BIND for DNS services: <span class="code-inline">yum install bind bind-utils</span>. Configure zones in <span class="code-inline">/etc/named.conf</span> and zone files in <span class="code-inline">/var/named/</span>. Start with <span class="code-inline">systemctl start named</span>. DNS provides hostname-to-IP resolution for the network. Use DNSSEC to protect DNS responses from tampering and spoofing attacks.' },
+    { t:'Firewall Configuration', b:'After installing any server component, configure the firewall to allow the service\'s port. Using firewalld: <span class="code-inline">firewall-cmd --permanent --add-service=http</span>. Without proper firewall rules, the server will be inaccessible from the network even if correctly installed. Apply the principle of least privilege — only open ports for services that are actively needed.' },
+    { t:'Service Management', b:'All server components in Linux are managed as systemd services. Use <span class="code-inline">systemctl start servicename</span> to start, <span class="code-inline">systemctl enable servicename</span> to auto-start on boot, <span class="code-inline">systemctl status servicename</span> to check status, and <span class="code-inline">systemctl restart servicename</span> to restart after configuration changes. Always check service status and logs in <span class="code-inline">journalctl</span> after making configuration changes.' }
+  ]
+},
+
+// QB Q19
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB19. Explain the steps to install Hyper-V in Windows 10.',
+  intro:`Hyper-V is Microsoft's Type 1 hypervisor that is built into Windows 10 Pro, Enterprise, and Education editions (not available in Home edition). It allows you to create and run virtual machines directly on your Windows 10 computer. Enabling Hyper-V requires 64-bit Windows 10, a processor with SLAT support, and at least 4 GB RAM. Once enabled, Hyper-V transforms Windows 10 into a powerful virtualization platform suitable for development, testing, and learning.`,
+  steps:[
+    { n:'Step 1', b:'Verify your system meets requirements: 64-bit processor with Second Level Address Translation (SLAT), at least 4 GB RAM, BIOS-level Hardware Virtualization enabled (Intel VT-x or AMD-V). Check in BIOS/UEFI settings and enable virtualization if not already enabled. Run <span class="code-inline">systeminfo</span> in Command Prompt to check if your system supports Hyper-V.' },
+    { n:'Step 2', b:'Go to Control Panel → Programs → Turn Windows Features On or Off. Alternatively, press Windows + R, type <span class="code-inline">optionalfeatures</span>, and press Enter to open the Windows Optional Features window. This dialog lists all optional Windows features that can be enabled or disabled without additional downloads.' },
+    { n:'Step 3', b:'In the Windows Features window, find and check the Hyper-V option. Make sure to tick both Hyper-V Management Tools and Hyper-V Platform sub-options. Click OK to begin the installation process. Windows will download and install the Hyper-V components from the Windows component store.' },
+    { n:'Step 4', b:'Windows will prompt you to restart the computer to complete the Hyper-V installation. Click Restart Now. After restart, Hyper-V will be fully installed and active as a Type 1 hypervisor running directly on the hardware. The Windows OS itself will run inside a special management VM on top of Hyper-V after this point.' },
+    { n:'Step 5', b:'After restart, open Hyper-V Manager by searching for it in the Start menu. The Hyper-V Manager console allows you to create new VMs, manage existing VMs, configure virtual switches, and monitor VM performance. Create a virtual switch first using Virtual Switch Manager before creating VMs to allow network connectivity.' },
+    { n:'Step 6', b:'In Hyper-V Manager, click New → Virtual Machine. Follow the wizard to set VM name, assign memory, create a virtual hard disk, and attach an ISO file for OS installation. Start the VM and follow the OS installation process as you would on a physical machine. Use Hyper-V Enhanced Session Mode for better performance and clipboard sharing.' }
+  ]
+},
+
+// QB Q20
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB20. Explain how to create a Virtual Machine using VMware Workstation.',
+  intro:`VMware Workstation is a Type 2 hypervisor for Windows and Linux that allows you to create and run multiple virtual machines on your desktop or laptop. It is widely used by developers, IT professionals, and students for testing software, learning different OS environments, and running isolated applications. Creating a VM in VMware Workstation is done through a guided wizard. VMware Workstation Pro also supports snapshots, cloning, and team features for advanced virtualization workflows.`,
+  steps:[
+    { n:'Step 1', b:'Launch VMware Workstation from the Start menu or desktop shortcut. The main window shows your existing VMs on the left panel. Click File → New Virtual Machine or click the Create a New Virtual Machine option on the home screen. Ensure VMware Tools is installed in existing VMs before creating new ones for best performance.' },
+    { n:'Step 2', b:'The New Virtual Machine Wizard starts. Select Typical for guided setup (recommended for beginners) or Custom for advanced configuration. For most purposes, Typical is sufficient. Click Next to continue. Custom mode allows you to specify hardware compatibility, number of processors, and network adapter types in more detail.' },
+    { n:'Step 3', b:'Choose how to install the OS: Installer disc (physical DVD), Installer disc image file (ISO) — browse and select your OS ISO file, or I will install the OS later (create a blank VM). Select your ISO file and click Next. VMware\'s Easy Install feature can automatically detect the OS and configure optimal settings.' },
+    { n:'Step 4', b:'VMware may auto-detect the OS from the ISO. If not, manually select the Guest Operating System type (Windows, Linux, etc.) and version. Give the VM a name and choose a location on your hard drive to store the VM files. Click Next. Choose a storage location with sufficient free space — typically 2-3x the VM disk size for snapshots.' },
+    { n:'Step 5', b:'Set the virtual hard disk size (minimum 20 GB for most OS). Choose whether to store the disk as a single file or split into multiple files. On the next screen, review the hardware summary — memory (RAM), CPUs, network adapter. Click Customize Hardware to modify these settings. Ensure you allocate enough RAM (at least 2GB for modern OS) for good VM performance.' },
+    { n:'Step 6', b:'Click Finish to create the VM. The VM appears in your library. Click Power On to start the VM. The OS installation wizard will boot from your ISO and proceed normally. Follow the on-screen instructions to complete OS installation inside the virtual machine. After OS installation, install VMware Tools for improved display resolution and clipboard sharing.' }
+  ]
+},
+
+// QB Q21
+{ type:'question', chap:'Question Bank', qbank:true, q:'QB21. Explain the technologies and processes required for deploying web services.',
+  intro:`Deploying web services involves setting up all the software and infrastructure components needed to make a web application accessible over the internet. This includes web servers, application servers, databases, networking, and security components. Modern web service deployment increasingly uses cloud platforms and containerization technologies. A well-designed deployment pipeline ensures web services are reliable, scalable, and secure for users around the world.`,
+  points:[
+    { t:'Web Server', b:'A web server (Apache, Nginx) handles incoming HTTP/HTTPS requests from browsers and serves web content. It acts as the entry point for all user traffic. Nginx is particularly popular for high-traffic sites due to its efficiency in handling thousands of concurrent connections. Nginx also functions as a reverse proxy, forwarding requests to backend application servers.' },
+    { t:'Application Server', b:'The application server runs the actual business logic of the web application. Examples include Tomcat (Java), Node.js (JavaScript), PHP-FPM (PHP), Gunicorn (Python). It processes requests from the web server, performs computations, and retrieves data from the database. Application servers are typically scaled horizontally behind a load balancer to handle increased traffic.' },
+    { t:'Database Server', b:'Web services store data in databases. Relational databases (MySQL, PostgreSQL) store structured data. NoSQL databases (MongoDB, Redis) handle unstructured or high-speed data. The database server must be secured and only accessible to the application server, not directly from the internet. Regular backups and replication are essential for database reliability.' },
+    { t:'Load Balancer', b:'A load balancer distributes incoming traffic across multiple application servers. This ensures no single server gets overwhelmed, improves availability, and enables horizontal scaling. Cloud providers offer managed load balancers (AWS ELB, Azure Load Balancer) that auto-scale with traffic. Health checks ensure traffic is only routed to healthy server instances.' },
+    { t:'SSL/TLS Certificate', b:'All web services must use HTTPS (HTTP over SSL/TLS) to encrypt communication between the browser and server. SSL certificates (from Let\'s Encrypt or commercial providers) must be installed on the web server. HTTPS protects user data and is required for good search engine ranking. HTTP/2 and HTTP/3 protocols also require HTTPS and provide significant performance improvements.' },
+    { t:'CI/CD Pipeline', b:'Modern web service deployment uses CI/CD (Continuous Integration/Continuous Deployment) pipelines with tools like Jenkins, GitHub Actions, or GitLab CI. Code changes are automatically tested and deployed to servers, enabling frequent, reliable deployments with minimal manual intervention. Blue-green deployments and canary releases allow new versions to be rolled out safely without downtime.' }
+  ]
+}
+
+];
+
+// ============================================================
+// AUDIO — Realistic book page-turn sound
+// ============================================================
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+  return audioCtx;
+}
+function playSwipeSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const duration = 0.22;
+    const sampleRate = ctx.sampleRate;
+    const frameCount = Math.floor(sampleRate * duration);
+    const buf = ctx.createBuffer(2, frameCount, sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      for (let i = 0; i < frameCount; i++) {
+        const t = i / sampleRate;
+        const progress = i / frameCount;
+        const noise = (Math.random() * 2 - 1);
+        const env = Math.pow(Math.sin(Math.PI * progress), 0.6) * Math.pow(1 - progress, 1.2);
+        const sweep = Math.sin(2 * Math.PI * (800 + 1200 * (1 - progress)) * t) * 0.06;
+        const crinkle = Math.sin(2 * Math.PI * 3200 * t * (1 + progress)) * 0.04;
+        data[i] = (noise * 0.55 + sweep + crinkle) * env * 0.45;
+      }
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 600;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 7000;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.7, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+    src.start();
+  } catch(e){}
+}
+
+// ============================================================
+// BOOK ENGINE
+// ============================================================
+let currentPage = 0;
+const totalPages = pages.length;
+let isAnimating = false;
+
+function renderPage(data, index) {
+  const div = document.createElement('div');
+  div.className = 'page';
+  div.dataset.index = index;
+
+  if (data.type === 'chapter') {
+    div.classList.add('chapter-page');
+    div.innerHTML = `
+      <div class="chapter-content">
+        <div class="chapter-roman">${data.roman}</div>
+        <span class="chapter-num-label">${data.num}</span>
+        <div class="chapter-title">${data.title.replace('\n','<br>')}</div>
+        <div class="chapter-divider"></div>
+        <div class="chapter-desc">${data.desc}</div>
+      </div>
+      <div class="chapter-swipe-hint">SWIPE RIGHT TO BEGIN →</div>
+    `;
+  } else {
+    let html = '';
+    if (data.qbank) html += `<div class="qbank-tag">TYBCA · Question Bank</div>`;
+    html += `<div class="q-label">Question</div>`;
+    html += `<div class="question">${data.q}</div>`;
+    html += `<strong class="ans-label">ANS)</strong>`;
+    html += `<div class="intro">${data.intro}</div>`;
+
+    if (data.points) {
+      data.points.forEach((p, i) => {
+        html += `<div class="point">
+          <div class="point-title" data-num="${i+1}.">${p.t}</div>
+          <div class="point-body">${p.b}</div>
+        </div>`;
+      });
+    } else if (data.steps) {
+      data.steps.forEach(s => {
+        html += `<div class="step">
+          <div class="step-num">${s.n}</div>
+          <div class="step-body">${s.b}</div>
+        </div>`;
+      });
+    }
+
+    div.innerHTML = `
+      <div class="page-header">
+        <span class="page-chapter-tag">${data.chap}</span>
+        <span class="page-num">${index + 1} / ${totalPages}</span>
+      </div>
+      <div class="page-content">${html}</div>
+    `;
+  }
+  return div;
+}
+
+function buildBook() {
+  const wrapper = document.getElementById('zoom-wrapper');
+  pages.forEach((p, i) => {
+    wrapper.appendChild(renderPage(p, i));
+  });
+  buildNavPanel();
+  showPage(0, null);
+}
+
+function buildNavPanel() {
+  const container = document.getElementById('nav-items-container');
+  container.innerHTML = '';
+  let lastChap = '';
+  pages.forEach((p, i) => {
+    if (p.type === 'chapter') {
+      if (lastChap) {
+        const sep = document.createElement('div');
+        sep.style.height = '6px';
+        container.appendChild(sep);
+      }
+      lastChap = p.num;
+      const item = document.createElement('div');
+      item.className = 'nav-item chapter-nav';
+      item.dataset.idx = i;
+      item.innerHTML = `<div class="nav-item-num" style="font-size:8px">${p.roman || '✦'}</div><div class="nav-item-label">${p.num}</div>`;
+      item.onclick = () => { jumpTo(i); closeNav(); };
+      container.appendChild(item);
+    } else {
+      const item = document.createElement('div');
+      item.className = 'nav-item';
+      item.dataset.idx = i;
+      const qShort = p.q.replace(/^(Q\d+\.|QB\d+\.)\s*/,'').substring(0,38) + (p.q.length > 45 ? '…' : '');
+      item.innerHTML = `<div class="nav-item-num">${i + 1}</div><div class="nav-item-label">${qShort}</div>`;
+      item.onclick = () => { jumpTo(i); closeNav(); };
+      container.appendChild(item);
+    }
+  });
+}
+
+function showPage(idx, direction) {
+  if (isAnimating && direction !== null) return;
+  const allPages = document.querySelectorAll('#zoom-wrapper .page');
+  const currentEl = document.querySelector('#zoom-wrapper .page.active');
+  const nextEl = allPages[idx];
+  if (!nextEl || nextEl === currentEl) return;
+
+  isAnimating = true;
+  if (direction !== null) playSwipeSound();
+
+  if (currentEl && direction !== null) {
+    const outClass = direction > 0 ? 'flip-out-left' : 'flip-out-right';
+    currentEl.classList.add(outClass);
+    currentEl.addEventListener('animationend', () => {
+      currentEl.classList.remove('active', outClass);
+    }, { once: true });
+  } else if (currentEl) {
+    currentEl.classList.remove('active');
+  }
+
+  nextEl.classList.add('active');
+  if (direction !== null) {
+    const inClass = direction > 0 ? 'flip-in-right' : 'flip-in-left';
+    nextEl.classList.add(inClass);
+    nextEl.addEventListener('animationend', () => {
+      nextEl.classList.remove(inClass);
+      isAnimating = false;
+    }, { once: true });
+  } else {
+    isAnimating = false;
+  }
+
+  const content = nextEl.querySelector('.page-content');
+  if (content) content.scrollTop = 0;
+
+  currentPage = idx;
+  updateNav();
+}
+
+function goPage(dir) {
+  const next = currentPage + dir;
+  if (next < 0 || next >= totalPages) return;
+  showPage(next, dir);
+}
+
+function jumpTo(idx) {
+  const dir = idx > currentPage ? 1 : -1;
+  showPage(idx, dir);
+}
+
+function updateNav() {
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage === totalPages - 1;
+
+  const p = pages[currentPage];
+  const label = p.type === 'chapter' ? p.num : `${p.chap} · ${currentPage + 1}/${totalPages}`;
+  document.getElementById('nav-label').textContent = label;
+
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === currentPage);
+  });
+}
+
+function openBook() {
+  const cover = document.getElementById('cover');
+  cover.classList.add('open');
+  document.getElementById('nav-bar').style.display = 'flex';
+  document.getElementById('menu-btn').style.display = 'flex';
+  document.getElementById('zoom-controls').style.display = 'flex';
+
+  setTimeout(() => {
+    const hint = document.getElementById('swipe-hint');
+    hint.classList.add('show');
+    setTimeout(() => hint.classList.remove('show'), 3000);
+  }, 1000);
+}
+
+function toggleNav() {
+  const panel = document.getElementById('nav-panel');
+  const overlay = document.getElementById('nav-overlay');
+  const btn = document.getElementById('menu-btn');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('show', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+}
+function closeNav() {
+  document.getElementById('nav-panel').classList.remove('open');
+  document.getElementById('nav-overlay').classList.remove('show');
+  document.getElementById('menu-btn').classList.remove('active');
+}
+
+// SWIPE
+let touchStartX = 0, touchStartY = 0, touchTime = 0;
+let scrollLocked = false;
+
+document.getElementById('book').addEventListener('touchstart', e => {
+  if (e.touches.length > 1) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchTime = Date.now();
+  scrollLocked = false;
+}, { passive: true });
+
+document.getElementById('book').addEventListener('touchmove', e => {
+  if (e.touches.length > 1) return;
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  if (!scrollLocked && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+    scrollLocked = true;
+  }
+}, { passive: true });
+
+document.getElementById('book').addEventListener('touchend', e => {
+  if (e.changedTouches.length > 1 || scrollLocked) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const dt = Date.now() - touchTime;
+  const velocity = Math.abs(dx) / dt;
+  if (Math.abs(dx) > Math.abs(dy) && (Math.abs(dx) > 45 || velocity > 0.3)) {
+    if (dx < 0) goPage(1);
+    else goPage(-1);
+  }
+}, { passive: true });
+
+// PINCH ZOOM
+let pinchStartDist = 0;
+let currentScale = 1;
+let baseScale = 1;
+
+function getPinchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+document.getElementById('book').addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    pinchStartDist = getPinchDist(e.touches);
+    baseScale = currentScale;
+  }
+}, { passive: true });
+
+document.getElementById('book').addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const dist = getPinchDist(e.touches);
+    const scale = Math.min(3, Math.max(1, baseScale * (dist / pinchStartDist)));
+    currentScale = scale;
+    applyZoom(scale);
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.getElementById('book').addEventListener('touchend', e => {
+  if (e.touches.length < 2 && currentScale < 1.1) {
+    currentScale = 1;
+    applyZoom(1);
+  }
+}, { passive: true });
+
+function applyZoom(scale) {
+  const w = document.getElementById('zoom-wrapper');
+  w.style.transition = 'transform 0.1s';
+  w.style.transformOrigin = 'top center';
+  w.style.transform = `scale(${scale})`;
+}
+
+function zoomIn() { currentScale = Math.min(3, currentScale + 0.25); applyZoom(currentScale); }
+function zoomOut() { currentScale = Math.max(1, currentScale - 0.25); applyZoom(currentScale); }
+function zoomReset() { currentScale = 1; applyZoom(1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goPage(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goPage(-1);
+  if (e.key === 'Escape') closeNav();
+});
+
+buildBook();
+</script>
+</body>
+</html>
